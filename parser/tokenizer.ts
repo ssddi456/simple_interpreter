@@ -22,7 +22,7 @@ export interface TokenizerContext {
 
 
 export type UnaryOperator = '!' | '-';
-const unaryOperators: UnaryOperator[] = ['!', '-'];
+export const unaryOperators: UnaryOperator[] = ['!', '-'];
 
 
 export type BinaryOperator = '+' | '-' | '*' | '/' | '||' | '&&' | '&' | '|' | '!=' | '!==' | '==';
@@ -149,17 +149,20 @@ export function getPosAtOffset(ctx: TokenizerContext, offset) {
     };
 
     const content = ctx.content;
-    const len = content.length
+    const len = Math.min(content.length, offset);
     for (let i = pos.offset; i < len; i++) {
         const element = content[i];
-        if (element == whiteSpace) {
-            pos.offset += 1;
-            pos.row += 1;
-        } else if (element == lineEnd) {
-            pos.offset += 1;
-            pos.line += 1;
-            pos.row = 0;
-        } else {
+        if (element) {
+            if (element !== lineEnd) {
+                pos.offset += 1;
+                pos.row += 1;
+            } else {
+                pos.offset += 1;
+                pos.line += 1;
+                pos.row = 0;
+            }
+        }
+        else {
             break;
         }
     }

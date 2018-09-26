@@ -1,4 +1,4 @@
-import { UnaryOperator, BinaryOperator, makeTokenizerContext, tokenize, Range, Pos, Token, TokenizerContext, getPosAtOffset } from "./tokenizer";
+import { UnaryOperator, BinaryOperator, makeTokenizerContext, tokenize, Range, Pos, Token, TokenizerContext, getPosAtOffset, binaryoperators, unaryOperators } from "./tokenizer";
 
 export interface AstBase extends Range {
     type: string;
@@ -156,9 +156,9 @@ export function makeAstComment(start: Pos, end: Pos, content: string): AstCommen
     };
 }
 
-export type AstExpression = AstUnary | AstBinary | AstTrinary | AstValue | AstIdentifier;
+export type AstExpression = AstUnary | AstBinary | AstTrinary | AstValue | AstIdentifier | AstCall;
 
-export type Ast = AstExpression | AstLabel | AstComment;
+export type Ast = AstExpression | AstLabel | AstComment | AstIf;
 
 export function toLineEnd(ctx: ParserContext): Token[] {
     const start = ctx.index;
@@ -174,25 +174,45 @@ export function toLineEnd(ctx: ParserContext): Token[] {
     return ctx.tokens.slice(start, end);
 }
 
-export function toToken(ctx: ParserContext, stopTokens: string[]): Token[] {
-    const start = ctx.index;
+export function toToken(ctx: ParserContext | ParserNode[], stopTokens: string[]) {
+    let isContext = true;
+    if (!('tokens' in ctx)) {
+        isContext = false;
+    }
+    const tokens = isContext ? (<ParserContext>ctx).tokens : <ParserNode[]>ctx;
+    const start = isContext ? (<ParserContext>ctx).index : 0;
+
     let end = start;
-    while (end < ctx.tokens.length) {
-        const token = ctx.tokens[end].content;
+    while (end < tokens.length) {
+        const token = getContent(tokens[end]);
         const stopAtIndex = stopTokens.indexOf(token);
         if (stopAtIndex !== -1) {
             break;
         }
         end++;
     }
-    return ctx.tokens.slice(start, end);
+
+    if (end >= tokens.length) {
+        return {
+            tokenIndex: -1,
+            tokens: undefined,
+            stopAt: undefined,
+        };
+    } else {
+        return {
+            tokenIndex: end,
+            tokens: tokens.slice(start, end),
+            stopAt: tokens[end]
+        };
+    }
 }
+
 export function currentToken(ctx: ParserContext): Token {
     return ctx.tokens[ctx.index];
 }
 export function makeAstIfAst(ctx: ParserContext): AstIf {
     const ifToken = currentToken(ctx);
-    ctx.index += ;
+    ctx.index += 1;
     const expression = toLineEnd(ctx);
     ctx.index += expression.length + 1;
 
@@ -206,32 +226,106 @@ export function makeAstIfAst(ctx: ParserContext): AstIf {
 }
 
 
-export function makeExpressionAst(ctx: ParserContext, tokens: Token[]): AstExpression {
+export function makeExpressionAst(ctx: ParserContext, tokens: ParserNode[]): AstExpression {
+    console.assert(tokens.length != 0);
+    let ret: AstExpression;
+    const startPos = getPos(tokens[0]);
+    const endPos = createEndPosFromToken(ctx.tokenizerCtx, tokens[tokens.length - 1]);
+    if (tokens.length == 1) {
+        const val = getContent(tokens[0]);
+        if (val.match(/^\d+$/)) {
+            ret = makeAstValue(startPos, endPos, Number(val));
+        } else if (val.match(/^[^\d]/)) {
+            ret = makeAstIdentifier(startPos, endPos, val);
+        } else {
+            throw new Error('illegal identifier');
+        }
+    } else {
+        const binaryIndex = toToken(tokens, binaryoperators);
+        if (binaryIndex.tokenIndex != -1) {
+            ret = makeAstBinary(startPos, endPos,
+                getContent(binaryIndex.stopAt as ParserNode) as BinaryOperator,
+                makeExpressionAst(ctx, tokens.slice(0, binaryIndex.tokenIndex)),
+                makeExpressionAst(ctx, tokens.slice(binaryIndex.tokenIndex + 1)),
+            );
+        } else if (unaryOperators.indexOf(getContent(tokens[0]) as UnaryOperator) != -1 && tokens.length == 2) {
+            ret = makeAstUnary(startPos, endPos,
+                getContent(tokens[0]) as UnaryOperator,
+                makeExpressionAst(ctx, tokens.slice(1)));
+        } else {
+            throw new Error('illegal expression');
+        }
+    }
 
+    ctx.index += tokens.length;
+    return ret;
 }
 
 
 export function makeAst(ctx: ParserContext, root: AstBlock): AstBlock {
     const container = root.children;
     const tokens = ctx.tokens;
+    console.log('makeAst', ctx.index, tokens.length);
     while (ctx.index < tokens.length) {
-        const token = tokens[ctx.index];
-        switch (token.content) {
-            case 'if':
-                // make if ast
-                break;
-            default:
-                break;
+        const token = currentToken(ctx);
+        const currentLineTokens = toLineEnd(ctx);
+        console.log('currentLineTokens', currentLineTokens);
+        const tokenContent = getContent(token);
+
+        if ('if' == tokenContent) {
+            // make if ast
+            container.push(makeAstIfAst(ctx));
+        } else {
+            container.push(makeExpressionAst(ctx, currentLineTokens));
         }
     }
     return root;
 }
+export function makeAstSubContext(context: ParserContext, subContext: Partial<ParserContext>, root: AstBlock) {
+    const extendedContext = {
+        ...context,
+        ...subContext,
+    };
 
-export function createEndPosFromToken(ctx: TokenizerContext, end: Token) {
+    const ret = makeAst(extendedContext, root);
+    context.index = extendedContext.index;
+    return ret;
+}
+
+type ParserNode = Token | Ast;
+function getContentLength(end: ParserNode): number {
+    if ('content' in end) {
+        return end.content.length;
+    } else {
+        return end.end.offset - end.start.offset;
+    }
+}
+
+function getContent(end: ParserNode): string {
+    if ('content' in end) {
+        return end.content;
+    } else {
+        return '';
+    }
+}
+
+function getPos(end: ParserNode): Pos {
+    if ('pos' in end) {
+        return end.pos;
+    } else {
+        return end.start;
+    }
+}
+
+export function createEndPosFromToken(ctx: TokenizerContext, end: ParserNode) {
+    const endNodePos = getPos(end);
+
+    console.log('endNodePos', endNodePos, getContentLength(end));
+
     const endPos: Pos = getPosAtOffset({
         content: ctx.content,
-        pos: { ...end.pos }
-    }, end.pos.offset + end.content.length);
+        pos: { ...endNodePos }
+    }, endNodePos.offset + getContentLength(end));
 
     return endPos;
 }
@@ -240,13 +334,15 @@ export interface ParserContext {
     tokens: Token[];
     index: number;
     tokenizerCtx: TokenizerContext;
+    stopTokens: string[]
 }
 
 function makeParserContext(tokenizerCtx: TokenizerContext, tokens: Token[]): ParserContext {
     return {
         tokens,
         tokenizerCtx,
-        index: 0
+        index: 0,
+        stopTokens: []
     };
 }
 
@@ -257,5 +353,5 @@ export function parser(content: string): AstBlock {
     const end = createEndPosFromToken(ctx, tokens[tokens.length - 1]);
     const parserContext = makeParserContext(ctx, tokens);
 
-    return makeAst(parserContext, makeAstBlock(tokens[0].pos, end, []));
+    return makeAst(parserContext, makeAstBlock(getPos(tokens[0]), end, []));
 }
