@@ -25,8 +25,8 @@ export type UnaryOperator = '!' | '-';
 export const unaryOperators: UnaryOperator[] = ['!', '-'];
 
 
-export type BinaryOperator = '+' | '-' | '*' | '/' | '||' | '&&' | '&' | '|' | '!=' | '!==' | '==';
-export const binaryoperators: BinaryOperator[] = ['+', '-', '*', '/', '||', '|', '&&', '&', '!=', '!==', '=='];
+export type BinaryOperator = '+' | '-' | '*' | '/' | '||' | '&&' | '&' | '|' | '!=' | '!==' | '==' | '<=' | '<' | '>' | '>=';
+export const binaryoperators: BinaryOperator[] = ['+', '-', '*', '/', '||', '|', '&&', '&', '!=', '!==', '==', '<=', '<', '>', '>='];
 
 export type TrinaryOperator = '?' | ':';
 export const trinaryOperators: TrinaryOperator[] = ['?', ':'];

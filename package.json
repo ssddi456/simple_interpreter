@@ -4,8 +4,8 @@
     "description": "super simple interpreter",
     "main": "index.js",
     "scripts": {
-        "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --reporter spec --recursive ./test/*",
-        "test-w": "mocha --compilers ts:ts-node/register,tsx:ts-node/register --watch --reporter spec --recursive ./test/*"
+        "test": "mocha --require ts-node/register --reporter spec --recursive ./test/*",
+        "test-w": "mocha --require ts-node/register --watch --reporter spec --recursive ./test/*"
     },
     "repository": {
         "type": "git",

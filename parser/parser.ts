@@ -163,15 +163,22 @@ export type Ast = AstExpression | AstLabel | AstComment | AstIf;
 export function toLineEnd(ctx: ParserContext): Token[] {
     const start = ctx.index;
     let end = start;
-    const startLine = ctx.tokens[end].pos.line;
-    while (end < ctx.tokens.length) {
-        const token = ctx.tokens[end];
-        if (token.pos.line != startLine) {
-            break;
+
+    const startToken = ctx.tokens[end];
+
+    if(startToken) {
+        const startLine = ctx.tokens[end].pos.line;
+        while (end < ctx.tokens.length) {
+            const token = ctx.tokens[end];
+            if (token.pos.line != startLine) {
+                break;
+            }
+            end++;
         }
-        end++;
+        return ctx.tokens.slice(start, end);
+    } else {
+        return [];
     }
-    return ctx.tokens.slice(start, end);
 }
 
 export function toToken(ctx: ParserContext | ParserNode[], stopTokens: string[]) {
@@ -210,14 +217,16 @@ export function toToken(ctx: ParserContext | ParserNode[], stopTokens: string[])
 export function currentToken(ctx: ParserContext): Token {
     return ctx.tokens[ctx.index];
 }
+
 export function makeAstIfAst(ctx: ParserContext): AstIf {
     const ifToken = currentToken(ctx);
     ctx.index += 1;
+
     const expression = toLineEnd(ctx);
-    ctx.index += expression.length + 1;
+    ctx.index += expression.length;
 
     const doTokens = toLineEnd(ctx);
-    const end = createEndPosFromToken(ctx.tokenizerCtx, doTokens[doTokens.length - 1]);
+    const end = createEndPosFromToken(ctx.tokenizerCtx, doTokens[doTokens.length - 1] || expression[expression.length - 1]);
 
     const doBlock = makeAstBlock(doTokens[0].pos, end, []);
     makeAst(ctx, doBlock);
@@ -269,7 +278,9 @@ export function makeAst(ctx: ParserContext, root: AstBlock): AstBlock {
     while (ctx.index < tokens.length) {
         const token = currentToken(ctx);
         const currentLineTokens = toLineEnd(ctx);
+
         console.log('currentLineTokens', currentLineTokens);
+
         const tokenContent = getContent(token);
 
         if ('if' == tokenContent) {
