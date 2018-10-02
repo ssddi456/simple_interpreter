@@ -10,6 +10,12 @@ describe('getToken', function () {
         assert.equal(token, 'if');
     });
 
+    it('will get a value', function(){
+        const ctx = makeTokenizerContext('2');
+        const { indexOffset, token } = getToken(ctx);
+        assert.equal(indexOffset, 1);
+        assert.equal(token, '2');
+    })
     it('tokenizer', function () {
         const tokens = tokenize(makeTokenizerContext('ctx'));
 
@@ -110,4 +116,16 @@ describe('getToken', function () {
             }
         }]);
     });
+
+    it('tokenize 3', function(){
+        const tokens = tokenize(makeTokenizerContext('2'));
+        assert.deepEqual(tokens, [{
+            content:'2',
+            pos: {
+                line:0,
+                row:0,
+                offset: 0
+            }
+        }])
+    })
 });

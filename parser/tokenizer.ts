@@ -25,8 +25,15 @@ export type UnaryOperator = '!' | '-';
 export const unaryOperators: UnaryOperator[] = ['!', '-'];
 
 
-export type BinaryOperator = '+' | '-' | '*' | '/' | '||' | '&&' | '&' | '|' | '!=' | '!==' | '==' | '<=' | '<' | '>' | '>=';
-export const binaryoperators: BinaryOperator[] = ['+', '-', '*', '/', '||', '|', '&&', '&', '!=', '!==', '==', '<=', '<', '>', '>='];
+export type CaculateOperator = '+' | '-' | '*' | '/' | '&' | '|';
+export const caculateOperators: CaculateOperator[] = ['+', '-', '*', '/', '&', '|'];
+export type ConpareOperator = '!=' | '!==' | '==' | '<=' | '<' | '>' | '>=';
+export const conpareOperators: ConpareOperator[] = ['!=', '!==', '==', '<=', '<', '>', '>='];
+export type LogicOperator = '||' | '&&';
+export const logicOperators: LogicOperator[] = ['||', '&&'];
+
+export type BinaryOperator = CaculateOperator | ConpareOperator | LogicOperator;;
+export const binaryoperators: BinaryOperator[] = [...caculateOperators, ...conpareOperators, ...logicOperators];
 
 export type TrinaryOperator = '?' | ':';
 export const trinaryOperators: TrinaryOperator[] = ['?', ':'];
@@ -101,7 +108,6 @@ export function getToken(ctx: TokenizerContext, stopTokens: string[] = operators
         }
     }
 
-
     return {
         indexOffset,
         token: getText(ctx.content, ctx.pos, indexOffset),
@@ -111,7 +117,7 @@ export function getToken(ctx: TokenizerContext, stopTokens: string[] = operators
 
 export function toOffset(ctx: TokenizerContext, offset: number) {
     const content = ctx.content;
-    offset = Math.min(offset, content.length - 1);;
+    offset = Math.min(offset, content.length);;
     let pos = ctx.pos;
 
     let nextLineEnd = content.slice(0, offset).indexOf(lineEnd, pos.offset);
@@ -173,7 +179,7 @@ export function getPosAtOffset(ctx: TokenizerContext, offset) {
 export function tokenize(ctx: TokenizerContext): Token[] {
     const content = ctx.content;
     const tokens: Token[] = [];
-    while (ctx.pos.offset < content.length - 1) {
+    while (ctx.pos.offset < content.length) {
         skipWhiteSpace(ctx);
         const { indexOffset, token, stopAt } = getToken(ctx);
         if (token) {
@@ -183,7 +189,6 @@ export function tokenize(ctx: TokenizerContext): Token[] {
             });
             addOffset(ctx, token.length);
         }
-
         if (stopAt) {
             if (stopAt !== lineEnd && stopAt !== whiteSpace) {
                 tokens.push({

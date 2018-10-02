@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "test": "mocha --require ts-node/register --reporter spec --recursive ./test/*",
-        "test-w": "mocha --require ts-node/register --watch --reporter spec --recursive ./test/*"
+        "test-w": "mocha --require ts-node/register --reporter spec --recursive ./test/* --watch"
     },
     "repository": {
         "type": "git",

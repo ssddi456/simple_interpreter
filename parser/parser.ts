@@ -158,7 +158,7 @@ export function makeAstComment(start: Pos, end: Pos, content: string): AstCommen
 
 export type AstExpression = AstUnary | AstBinary | AstTrinary | AstValue | AstIdentifier | AstCall;
 
-export type Ast = AstExpression | AstLabel | AstComment | AstIf;
+export type Ast = AstExpression | AstLabel | AstComment | AstIf | AstBlock;
 
 export function toLineEnd(ctx: ParserContext): Token[] {
     const start = ctx.index;
@@ -331,8 +331,6 @@ function getPos(end: ParserNode): Pos {
 export function createEndPosFromToken(ctx: TokenizerContext, end: ParserNode) {
     const endNodePos = getPos(end);
 
-    console.log('endNodePos', endNodePos, getContentLength(end));
-
     const endPos: Pos = getPosAtOffset({
         content: ctx.content,
         pos: { ...endNodePos }
@@ -360,7 +358,7 @@ function makeParserContext(tokenizerCtx: TokenizerContext, tokens: Token[]): Par
 export function parser(content: string): AstBlock {
     const ctx = makeTokenizerContext(content);
     const tokens = tokenize(ctx);
-
+    console.log(tokens);
     const end = createEndPosFromToken(ctx, tokens[tokens.length - 1]);
     const parserContext = makeParserContext(ctx, tokens);
 

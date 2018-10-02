@@ -126,12 +126,12 @@ describe('parser', function () {
         })
     });
 
-    it('if', function(){
+    it('if 1', function () {
         const info = parser(`if test
     next`);
 
         assert.deepEqual(info, {
-            type:'block',
+            type: 'block',
             start: {
                 line: 0,
                 row: 0,
@@ -143,7 +143,7 @@ describe('parser', function () {
                 offset: 16
             },
             children: [{
-                type:'if',
+                type: 'if',
                 start: {
                     line: 0,
                     row: 0,
@@ -169,7 +169,7 @@ describe('parser', function () {
                     name: 'test'
                 },
                 do: {
-                    type:'block',
+                    type: 'block',
                     start: {
                         line: 1,
                         row: 4,
@@ -200,4 +200,106 @@ describe('parser', function () {
 
     });
 
+    it('if 2', function () {
+        const info = parser(`if a+b
+    next    
+`);
+
+        assert.deepEqual(info, {
+            type: 'block',
+            start: {
+                line: 0,
+                row: 0,
+                offset: 0
+            },
+            end: {
+                line: 1,
+                row: 8,
+                offset: 15
+            },
+            children: [{
+                type: 'if',
+                start: {
+                    line: 0,
+                    row: 0,
+                    offset: 0
+                },
+                end: {
+                    line: 1,
+                    row: 8,
+                    offset: 15
+                },
+                expression: {
+                    type: 'binary',
+                    start: {
+                        line: 0,
+                        row: 3,
+                        offset: 3
+                    },
+                    end: {
+                        line: 0,
+                        row: 6,
+                        offset: 6
+                    },
+                    operator: '+',
+                    left: {
+                        type: 'identifier',
+                        start: {
+                            line: 0,
+                            row: 3,
+                            offset: 3
+                        },
+                        end: {
+                            line: 0,
+                            row: 4,
+                            offset: 4
+                        },
+                        name: 'a'
+                    },
+                    right: {
+                        type: 'identifier',
+                        start: {
+                            line: 0,
+                            row: 5,
+                            offset: 5
+                        },
+                        end: {
+                            line: 0,
+                            row: 6,
+                            offset: 6
+                        },
+                        name: 'b'
+
+                    }
+                },
+                do: {
+                    type: 'block',
+                    start: {
+                        line: 1,
+                        row: 4,
+                        offset: 11
+                    },
+                    end: {
+                        line: 1,
+                        row: 8,
+                        offset: 15
+                    },
+                    children: [{
+                        type: 'identifier',
+                        start: {
+                            line: 1,
+                            row: 4,
+                            offset: 11
+                        },
+                        end: {
+                            line: 1,
+                            row: 8,
+                            offset: 15
+                        },
+                        name: 'next'
+                    }]
+                }
+            }]
+        });
+    });
 });
