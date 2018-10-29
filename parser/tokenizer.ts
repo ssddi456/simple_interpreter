@@ -37,7 +37,7 @@ export const binaryoperators: BinaryOperator[] = [...caculateOperators, ...conpa
 
 export type TrinaryOperator = '?' | ':';
 export const trinaryOperators: TrinaryOperator[] = ['?', ':'];
-
+export const labelMake = ':';
 
 export const callOperator = '(';
 export const callEnd = ')';

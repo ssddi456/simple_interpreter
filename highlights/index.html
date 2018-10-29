@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="http://cdn.staticfile.org/twitter-bootstrap/3.0.0/css/bootstrap.css">
+</head>
+
+<body>
+    <style>
+        .line {
+            font-family: monospace;
+            position: relative;
+        }
+        .token {
+            position: absolute;
+        }
+        .token:hover {
+            outline: 1px solid black;
+        }
+    </style>
+    <div class="container-fluid" id="main">
+        <div class="row">
+            <div class="col-sm-6">
+                <div v-for="line in lines" class="line">
+                    <div class="token" :style="{left: (token.pos.row * 7) + 'px'}" v-for="token in line">{{token.content}}</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.bootcss.com/vue/2.5.16/vue.js"></script>
+    <script>
+
+        var tokens = [
+            {
+                content: 'ctx',
+                pos: {
+                    line: 0,
+                    row: 0,
+                    offset: 0
+                }
+            }, {
+                content: '(',
+                pos: {
+                    line: 0,
+                    row: 3,
+                    offset: 3
+                }
+            },
+            {
+                content: '3',
+                pos: {
+                    line: 0,
+                    row: 4,
+                    offset: 4
+                }
+            },
+            {
+                content: ',',
+                pos: {
+                    line: 0,
+                    row: 5,
+                    offset: 5
+                }
+            },
+            {
+                content: '1',
+                pos: {
+                    line: 0,
+                    row: 7,
+                    offset: 7
+                }
+            },
+            {
+                content: ')',
+                pos: {
+                    line: 0,
+                    row: 8,
+                    offset: 8
+                }
+            }];
+        var ast = {};
+        var lines = [];
+
+        function tokensToLines(tokens) {
+            var line = [];
+            var lineIndex = 0;
+            for (let i = 0; i < tokens.length; i++) {
+                const element = tokens[i];
+                if (element.pos.line != lineIndex) {
+                    lines.push(line);
+                    line = [element];
+                } else {
+                    line.push(element);
+                }
+            }
+            if (line.length) {
+                lines.push(line);
+            }
+            return lines;
+        }
+
+
+        var mainVm = new Vue({
+            el: '#main',
+            data: {
+                lines: lines,
+                astInfo: {}
+            },
+            methods: {
+                showNodeInfo: function (node) {
+
+                },
+                loadCodeInfo: function () {
+                    this.lines = tokensToLines(tokens);
+                }
+            }
+        });
+
+        mainVm.loadCodeInfo();
+
+    </script>
+</body>
+
+</html>
