@@ -9,7 +9,7 @@ const tokens = tokenize(ctx);
 
 const lines = tokensToLines(tokens);
 
-var mainVm = new Vue({
+const mainVm = new Vue({
     el: '#main',
     data: {
         lines: lines,
