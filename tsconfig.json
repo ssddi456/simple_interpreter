@@ -1,6 +1,12 @@
 {
     "compilerOptions": {
         "allowJs": true,
-        "strictNullChecks": true
-    }
+        "strictNullChecks": true,
+        "module": "amd",
+        "outDir": "./output"
+    },
+    "exclude": [
+        "./test/*",
+        "./output/*"
+    ]
 }

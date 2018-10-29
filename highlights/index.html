@@ -15,9 +15,11 @@
             font-family: monospace;
             position: relative;
         }
+
         .token {
             position: absolute;
         }
+
         .token:hover {
             outline: 1px solid black;
         }
@@ -35,96 +37,14 @@
         </div>
     </div>
     <script src="https://cdn.bootcss.com/vue/2.5.16/vue.js"></script>
+    <script src="https://cdn.bootcss.com/require.js/2.3.4/require.min.js"></script>
     <script>
 
-        var tokens = [
-            {
-                content: 'ctx',
-                pos: {
-                    line: 0,
-                    row: 0,
-                    offset: 0
-                }
-            }, {
-                content: '(',
-                pos: {
-                    line: 0,
-                    row: 3,
-                    offset: 3
-                }
-            },
-            {
-                content: '3',
-                pos: {
-                    line: 0,
-                    row: 4,
-                    offset: 4
-                }
-            },
-            {
-                content: ',',
-                pos: {
-                    line: 0,
-                    row: 5,
-                    offset: 5
-                }
-            },
-            {
-                content: '1',
-                pos: {
-                    line: 0,
-                    row: 7,
-                    offset: 7
-                }
-            },
-            {
-                content: ')',
-                pos: {
-                    line: 0,
-                    row: 8,
-                    offset: 8
-                }
-            }];
-        var ast = {};
-        var lines = [];
-
-        function tokensToLines(tokens) {
-            var line = [];
-            var lineIndex = 0;
-            for (let i = 0; i < tokens.length; i++) {
-                const element = tokens[i];
-                if (element.pos.line != lineIndex) {
-                    lines.push(line);
-                    line = [element];
-                } else {
-                    line.push(element);
-                }
-            }
-            if (line.length) {
-                lines.push(line);
-            }
-            return lines;
-        }
-
-
-        var mainVm = new Vue({
-            el: '#main',
-            data: {
-                lines: lines,
-                astInfo: {}
-            },
-            methods: {
-                showNodeInfo: function (node) {
-
-                },
-                loadCodeInfo: function () {
-                    this.lines = tokensToLines(tokens);
-                }
-            }
-        });
-
-        mainVm.loadCodeInfo();
-
+        require([
+            '../output/highlights/index.js',
+        ], function ( highlights ) {
+           
+        })
     </script>
 </body>
 
