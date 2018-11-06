@@ -1,4 +1,4 @@
-import { UnaryOperator, BinaryOperator, makeTokenizerContext, tokenize, Range, Pos, Token, TokenizerContext, getPosAtOffset, binaryoperators, unaryOperators } from "./tokenizer";
+import { UnaryOperator, BinaryOperator, makeTokenizerContext, tokenize, Range, Pos, Token, TokenizerContext, getPosAtOffset, binaryoperators, unaryOperators, labelMaker, assignmentOperators } from "./tokenizer";
 import { AstBase } from "./parser";
 
 
@@ -110,7 +110,7 @@ export interface AstIdentifier extends AstBase {
     name: string;
 }
 
-export function makeAstIdentifier(start: Pos, end: Pos, name): AstIdentifier {
+export function makeAstIdentifier(start: Pos, end: Pos, name: string): AstIdentifier {
     return {
         start,
         end,
@@ -149,7 +149,7 @@ export function makeAstLabel(start: Pos, end: Pos, name: string): AstLabel {
 }
 
 export interface AstJump extends AstBase {
-    type:'jump',
+    type: 'jump',
     labelName: string
 }
 
@@ -157,7 +157,7 @@ export function makeAstJump(start: Pos, end: Pos, labelName: string): AstJump {
     return {
         start,
         end,
-        type:'jump',
+        type: 'jump',
         labelName,
     };
 }
@@ -250,6 +250,9 @@ export function makeAstIfAst(ctx: ParserContext): AstIf {
     return makeAstIf(ifToken.pos, end, makeExpressionAst(ctx, expression));
 }
 
+class ParseError extends Error {
+    token: ParserNode
+}
 
 export function makeExpressionAst(ctx: ParserContext, tokens: ParserNode[]): AstExpression {
     console.assert(tokens.length != 0);
@@ -263,22 +266,38 @@ export function makeExpressionAst(ctx: ParserContext, tokens: ParserNode[]): Ast
         } else if (val.match(/^[^\d]/)) {
             ret = makeAstIdentifier(startPos, endPos, val);
         } else {
-            throw new Error('illegal identifier');
+            const error = new ParseError('illegal identifier');
+            error.token = tokens[0];
+            throw error;
         }
     } else {
         const binaryIndex = toToken(tokens, binaryoperators);
+        const tokenContent = getContent(tokens[0]);
         if (binaryIndex.tokenIndex != -1) {
             ret = makeAstBinary(startPos, endPos,
                 getContent(binaryIndex.stopAt as ParserNode) as BinaryOperator,
                 makeExpressionAst(ctx, tokens.slice(0, binaryIndex.tokenIndex)),
                 makeExpressionAst(ctx, tokens.slice(binaryIndex.tokenIndex + 1)),
             );
-        } else if (unaryOperators.indexOf(getContent(tokens[0]) as UnaryOperator) != -1 && tokens.length == 2) {
+        } else if (unaryOperators.indexOf(tokenContent as UnaryOperator) != -1 && tokens.length == 2) {
             ret = makeAstUnary(startPos, endPos,
-                getContent(tokens[0]) as UnaryOperator,
+                tokenContent as UnaryOperator,
                 makeExpressionAst(ctx, tokens.slice(1)));
+        } else if ('nearest' == tokenContent) {
+            const secondTokenContent = getContent(tokens[1]);
+            if (objectType.indexOf(secondTokenContent) !== -1) {
+                ret = makeAstCall(startPos, endPos, makeAstIdentifier(startPos, createEndPosFromToken(ctx.tokenizerCtx, tokens[0]), tokenContent),
+                    [makeAstIdentifier(getPos(tokens[1]), createEndPosFromToken(ctx.tokenizerCtx, tokens[1]), secondTokenContent)]
+                );
+            } else {
+                const error = new ParseError('illegal expression');
+                error.token = tokens[1];
+                throw error;
+            }
         } else {
-            throw new Error('illegal expression');
+            const error = new ParseError('illegal expression');
+            error.token = tokens[0];
+            throw error;
         }
     }
 
@@ -286,8 +305,38 @@ export function makeExpressionAst(ctx: ParserContext, tokens: ParserNode[]): Ast
     return ret;
 }
 
+const preservedWords = [
+    'nearest',
+    'and',
 
-export function makeAst(ctx: ParserContext ): Ast[] {
+    'nw',
+    'w',
+    'sw',
+    'n',
+    's',
+    'ne',
+    'e',
+    'se',
+
+    'step',
+    'jump',
+    'pickup',
+    'drop',
+
+    'if',
+    'endif',
+
+    'mem1',
+    'mem2',
+    'mem3',
+    'mem4',
+];
+
+const objectType = [
+    'datacube',
+]
+
+export function makeAst(ctx: ParserContext): Ast[] {
     const container = [] as Ast[];
     const tokens = ctx.tokens;
     console.log('makeAst', ctx.index, tokens.length);
@@ -298,8 +347,12 @@ export function makeAst(ctx: ParserContext ): Ast[] {
         console.log('currentLineTokens', currentLineTokens);
 
         const tokenContent = getContent(token);
+        const secondTokenContent = getContent(currentLineTokens[1]);
 
-        if ('if' == tokenContent) {
+        if (currentLineTokens.length == 2 && labelMaker == secondTokenContent) {
+            container.push(makeAstLabel(currentLineTokens[0].pos, currentLineTokens[1].pos, currentLineTokens[0].content));
+            ctx.index += 2;
+        } else if ('if' == tokenContent) {
             // make if ast
             container.push(makeAstIfAst(ctx));
         } else {
@@ -353,7 +406,7 @@ export interface ParserContext {
     stopTokens: string[]
 }
 
-function makeParserContext(tokenizerCtx: TokenizerContext, tokens: Token[]): ParserContext {
+export function makeParserContext(tokenizerCtx: TokenizerContext, tokens: Token[]): ParserContext {
     return {
         tokens,
         tokenizerCtx,
@@ -366,7 +419,6 @@ export function parserWithJump(content: string): Ast[] {
     const ctx = makeTokenizerContext(content);
     const tokens = tokenize(ctx);
     console.log(tokens);
-    const end = createEndPosFromToken(ctx, tokens[tokens.length - 1]);
     const parserContext = makeParserContext(ctx, tokens);
 
     return makeAst(parserContext);

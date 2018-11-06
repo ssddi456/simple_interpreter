@@ -13,22 +13,51 @@
     <style>
         .line {
             font-family: monospace;
+            line-height: 2em;
+        }
+
+        .line:hover {
+            background-color: rgb(225, 243, 255);
+        }
+
+        .line-number {
+            display: inline-block;
+            width: 4em;
+            text-align: right;
+            border-right: 2px solid white;
+            margin-right: 2px;
+
+        }
+
+        .line-content {
+            display: inline-block;
             position: relative;
         }
 
         .token {
             position: absolute;
+            top: 0;
+            white-space: pre;
         }
-
+        .token.error {
+            background-color: rgb(207, 79, 79);
+        }
         .token:hover {
-            outline: 1px solid black;
+            outline: 1px solid rgb(58, 59, 146);
         }
     </style>
     <div class="container-fluid" id="main">
         <div class="row">
             <div class="col-sm-6">
-                <div v-for="line in lines" class="line">
-                    <div class="token" :style="{left: (token.pos.row * 7) + 'px'}" v-for="token in line">{{token.content}}</div>
+                <div v-for="(line, idx) in lines" class="line">
+                    <div class="line-number">{{ idx }}</div>
+                    <div class="line-content">
+                        &nbsp;
+                        <div v-for="token in line" 
+                            :class='["token", token.error && "error"]'
+                            :style="{left: (token.pos.row * 7) + 'px'}" 
+                            @mouseenter="showNodeInfo(token)">{{token.content}}</div>
+                    </div>
                 </div>
             </div>
             <div class="col-sm-6">
@@ -42,8 +71,8 @@
 
         require([
             '../output/highlights/index.js',
-        ], function ( highlights ) {
-           
+        ], function (highlights) {
+
         })
     </script>
 </body>

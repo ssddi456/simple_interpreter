@@ -31,13 +31,15 @@ export type ConpareOperator = '!=' | '!==' | '==' | '<=' | '<' | '>' | '>=';
 export const conpareOperators: ConpareOperator[] = ['!=', '!==', '==', '<=', '<', '>', '>='];
 export type LogicOperator = '||' | '&&';
 export const logicOperators: LogicOperator[] = ['||', '&&'];
+export type AssignmentOperator = '=';
+export const assignmentOperators: AssignmentOperator[] = ['='];
 
-export type BinaryOperator = CaculateOperator | ConpareOperator | LogicOperator;;
-export const binaryoperators: BinaryOperator[] = [...caculateOperators, ...conpareOperators, ...logicOperators];
+export type BinaryOperator = CaculateOperator | ConpareOperator | LogicOperator | AssignmentOperator;
+export const binaryoperators: BinaryOperator[] = [...caculateOperators, ...conpareOperators, ...logicOperators, ...assignmentOperators];
 
 export type TrinaryOperator = '?' | ':';
 export const trinaryOperators: TrinaryOperator[] = ['?', ':'];
-export const labelMake = ':';
+export const labelMaker = ':';
 
 export const callOperator = '(';
 export const callEnd = ')';
