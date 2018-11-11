@@ -1,6 +1,7 @@
-import { tokenize, makeTokenizerContext } from "../parser/tokenizer";
+import { tokenize, makeTokenizerContext, Pos, Token } from "../parser/tokenizer";
 import { tokensToLines } from "../printer/printer";
-import { makeParserContext, makeAst } from "../parser/parser_with_jump";
+import { makeParserContext, makeAst, Ast } from "../parser/parser_with_jump";
+import { walk } from "../walker/walker_with_jump";
 
 const content = `a:
 b:
@@ -36,15 +37,18 @@ const parserContext = makeParserContext(ctx, tokens);
 
 console.log(lines);
 
+
 const mainVm = new Vue({
     el: '#main',
     data: {
         lines: lines,
-        astInfo: {}
+        ast: [],
     },
     methods: {
-        showNodeInfo: function (node) {
-            console.log(node);
+        showNodeInfo: function (node: Token) {
+            // console.log(node);
+            const ast = findNodeByPos(this.ast, node.pos.offset);
+            console.log(ast.map(x => x.type).join('->'));
         },
     }
 });
@@ -52,10 +56,22 @@ const mainVm = new Vue({
 
 try {
     const ast = makeAst(parserContext);
+    mainVm.ast = ast;
 } catch (error) {
-    console.log(error.token);
+    console.log(error);
     error.token.error = 1;
 }
 
-
+function findNodeByPos(ast: Ast[], offset: number): Ast[] {
+    let target: Ast[] = [];
+    walk(ast, function (element) {
+        const start = element.start.offset;
+        const end = element.end.offset;
+        if (start > offset || end < offset) {
+            return false;
+        }
+        target.push(element);
+    });
+    return target;
+}
 

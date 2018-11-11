@@ -29,8 +29,8 @@ export type CaculateOperator = '+' | '-' | '*' | '/' | '&' | '|';
 export const caculateOperators: CaculateOperator[] = ['+', '-', '*', '/', '&', '|'];
 export type ConpareOperator = '!=' | '!==' | '==' | '<=' | '<' | '>' | '>=';
 export const conpareOperators: ConpareOperator[] = ['!=', '!==', '==', '<=', '<', '>', '>='];
-export type LogicOperator = '||' | '&&';
-export const logicOperators: LogicOperator[] = ['||', '&&'];
+export type LogicOperator = '||' | '&&' | 'and' | 'or';
+export const logicOperators: LogicOperator[] = ['||', '&&', 'and', 'or'];
 export type AssignmentOperator = '=';
 export const assignmentOperators: AssignmentOperator[] = ['='];
 

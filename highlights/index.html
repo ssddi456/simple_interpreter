@@ -14,6 +14,7 @@
         .line {
             font-family: monospace;
             line-height: 2em;
+            margin-bottom: 10px;
         }
 
         .line:hover {
@@ -38,12 +39,30 @@
             position: absolute;
             top: 0;
             white-space: pre;
+            background-color: rgb(199, 198, 255);
+            outline: 1px solid white;
         }
+
         .token.error {
             background-color: rgb(207, 79, 79);
         }
+
         .token:hover {
             outline: 1px solid rgb(58, 59, 146);
+            z-index: 100;
+        }
+        .token:hover .token-info {
+            opacity: 1;
+            background-color: rgb(252, 249, 88);
+        }
+        .token .token-info {
+            position: absolute;
+            left: 0.5px;
+            top: -8px;
+            background-color: white;
+            opacity: .6;
+            font-size: 12px;
+            line-height: 1em;
         }
     </style>
     <div class="container-fluid" id="main">
@@ -53,10 +72,8 @@
                     <div class="line-number">{{ idx }}</div>
                     <div class="line-content">
                         &nbsp;
-                        <div v-for="token in line" 
-                            :class='["token", token.error && "error"]'
-                            :style="{left: (token.pos.row * 7) + 'px'}" 
-                            @mouseenter="showNodeInfo(token)">{{token.content}}</div>
+                        <div v-for="token in line" :class='["token", token.error && "error"]' :style="{left: (token.pos.row * 7) + 'px'}"
+                            @mouseenter="showNodeInfo(token)"><div class="token-info">{{token.index}}</div>{{token.content}}</div>
                     </div>
                 </div>
             </div>
