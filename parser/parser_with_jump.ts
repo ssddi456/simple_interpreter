@@ -296,6 +296,8 @@ export function makeLogicExpressionAst(tokens: Token[]): AstExpression {
 
     do {
         const logicTokenInfo = toToken(searchInToken, logicOperators);
+        console.log(JSON.stringify(logicTokenInfo));
+
         const compareTokens = logicTokenInfo.tokens as Token[];
         const [left, operator, right] = compareTokens;
 
@@ -303,6 +305,8 @@ export function makeLogicExpressionAst(tokens: Token[]): AstExpression {
             makeAstIdentifierFromToken(left), makeAstIdentifierFromToken(right));
 
         if (!firstLoop) {
+            console.log('loop through and/or', JSON.stringify(getPos(leftOperator as AstExpression)), JSON.stringify(getEndPos(rightOperator)));
+
             leftOperator = makeAstBinary(
                 getPos(leftOperator as AstExpression), getEndPos(rightOperator),
                 logicOperator as BinaryOperator,
@@ -313,11 +317,14 @@ export function makeLogicExpressionAst(tokens: Token[]): AstExpression {
             leftOperator = rightOperator;
         }
 
+        idx += compareTokens.length;
         if (logicTokenInfo.stopAt) {
             logicOperator = getContent(logicTokenInfo.stopAt) as BinaryOperator;
+            idx += 1;
+            searchInToken = searchInToken.slice(4);
+        } else {
+            searchInToken = searchInToken.slice(3);
         }
-
-        idx += compareTokens.length;
     } while (idx < tokens.length);
 
     return leftOperator;
@@ -331,6 +338,8 @@ export function makeExpressionAst(ctx: ParserContext, tokens: Token[]): AstExpre
     let ret: AstExpression;
     const startPos = getPos(tokens[0]);
     const endPos = getEndPos(tokens[tokens.length - 1]);
+    console.log('makeExpressionAst', JSON.stringify(startPos), JSON.stringify(endPos));
+
     if (tokens.length == 1) {
         const val = getContent(tokens[0]);
         if (val.match(/^\d+$/)) {
@@ -489,6 +498,88 @@ export function makeAst(ctx: ParserContext): Ast[] {
     return container;
 }
 
+export interface IfInfo {
+    if: AstIf;
+    else?: AstElse;
+    endif: AstEndIf;
+}
+export interface JumpInfo{
+    jump: AstJump;
+    label: AstLabel;
+}
+
+export interface JumpTable {
+    labelMap: {
+        [k: string]: AstLabel
+    };
+    ifMap: Array<IfInfo>;
+    jumpMap: Array<JumpInfo>;
+}
+
+export function makeJumpTable(asts: Ast[]): JumpTable {
+    const ret: JumpTable = {
+        labelMap: {},
+        ifMap: [],
+        jumpMap: [],
+    };
+
+    const ifStack: Partial<IfInfo>[] = [];
+
+    let currentIf: Partial<IfInfo> | undefined = undefined;
+
+    function startIfStack(ast: AstIf) {
+        const ret: Partial<IfInfo> = {
+            if: ast,
+        };
+        ifStack.push(ret);
+        currentIf = ret;
+    }
+
+    function endIfStack(ast: AstEndIf): IfInfo {
+        const ret = currentIf;
+        if (currentIf == undefined) {
+            throw new ParseError('illegal endif element', ast);
+        }
+        currentIf.endif = ast;
+        ifStack.pop();
+        currentIf = ifStack[ifStack.length - 1];
+        return ret as IfInfo;
+    }
+
+    const jumps: AstJump[] = [];
+    for (let i = 0; i < asts.length; i++) {
+        const element = asts[i];
+        if (element.type == 'label') {
+            ret.labelMap[element.name] = element;
+        } else if (element.type == 'if') {
+            startIfStack(element);
+        } else if (element.type == 'else') {
+            if (currentIf === undefined) {
+                throw new ParseError('illegal else element', element);
+            } else {
+                (currentIf as Partial<IfInfo>).else = element;
+            }
+        } else if (element.type == 'endif') {
+            ret.ifMap.push(endIfStack(element));
+        } else if(element.type =='jump'){
+            jumps.push(element);
+        }
+    }
+
+    for (let i = 0; i < jumps.length; i++) {
+        const element = jumps[i];
+        if( !ret.labelMap[element.labelName] ){
+            throw new ParseError('no label name ' + element.labelName, element);
+        }
+
+        ret.jumpMap.push({
+            jump: element,
+            label: ret.labelMap[element.labelName]
+        });
+    }
+
+    return ret;
+}
 
 type ParserNode = Token | Ast;
 function getContentLength(end: ParserNode): number {
@@ -507,21 +598,28 @@ function getContent(end: ParserNode): string {
     }
 }
 
-function getPos(end: ParserNode): Pos {
-    if ('pos' in end) {
-        return end.pos;
+function getPos(token: ParserNode): Pos {
+    if ('pos' in token) {
+        return token.pos;
     } else {
-        return end.start;
+        return token.start;
     }
 }
 function getEndPos(token: ParserNode): Pos {
     const pos = getPos(token);
-    const content = getContent(token);
-    return {
-        line: pos.line,
-        row: pos.row + content.length,
-        offset: pos.offset + content.length
-    };
+    let contentLength = 0;
+    if ('content' in token) {
+        contentLength = token.content.length;
+        return {
+            line: pos.line,
+            row: pos.row + contentLength,
+            offset: pos.offset + contentLength
+        };
+    } else if ('end' in token) {
+        return token.end;
+    } else {
+        throw new ParseError('illegal token', token);
+    }
 }
 export function createEndPosFromToken(ctx: TokenizerContext, end: ParserNode) {
     const endNodePos = getPos(end);

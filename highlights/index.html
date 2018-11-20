@@ -27,7 +27,6 @@
             text-align: right;
             border-right: 2px solid white;
             margin-right: 2px;
-
         }
 
         .line-content {
@@ -51,11 +50,14 @@
             outline: 1px solid rgb(58, 59, 146);
             z-index: 100;
         }
+
         .token:hover .token-info {
             opacity: 1;
             background-color: rgb(252, 249, 88);
         }
+
         .token .token-info {
+            z-index: 1;
             position: absolute;
             left: 0.5px;
             top: -8px;
@@ -64,21 +66,109 @@
             font-size: 12px;
             line-height: 1em;
         }
+
+        .token.ast-range {
+            outline: 2px dashed rgba(4, 24, 61, 0.6);
+            background-color: transparent;
+            pointer-events: none;
+        }
+
+        .links {
+            margin-left: calc(4em + 4px + 4px);
+            position: relative;
+        }
+
+        .links .if-link {
+            position: absolute;
+            border-left: 4px solid rgba(105, 185, 231, 0.6);
+            border-top: 4px solid rgba(105, 185, 231, 0.6);
+        }
+
+        .links .link-color-1 {
+            border-color: rgba(255, 159, 128, 0.5);
+        }
+
+        .links .link-color-2 {
+            border-color: rgba(255, 128, 159, 0.5);
+        }
+
+        .links .link-color-3 {
+            border-color: rgba(208, 66, 255, 0.5);
+        }
+
+        .links .link-color-4 {
+            border-color: rgba(128, 255, 223, 0.5);
+        }
+
+        .links .link-color-5 {
+            border-color: rgba(128, 223, 255, 0.5);
+        }
     </style>
     <div class="container-fluid" id="main">
         <div class="row">
             <div class="col-sm-6">
-                <div v-for="(line, idx) in lines" class="line">
-                    <div class="line-number">{{ idx }}</div>
-                    <div class="line-content">
-                        &nbsp;
-                        <div v-for="token in line" :class='["token", token.error && "error"]' :style="{left: (token.pos.row * 7) + 'px'}"
-                            @mouseenter="showNodeInfo(token)"><div class="token-info">{{token.index}}</div>{{token.content}}</div>
+                <div class="links">
+                    <div v-for="ifInfo in jumpTable.ifMap" @mouseenter="highlights(ifInfo)">
+                        <div v-if="ifInfo.else">
+                            <div class="if-link" :style="{
+                                    left: (ifInfo.if.start.row * 7) + 'px', 
+                                    top: ((ifInfo.if.start.line + 1) * 38 - 5) + 'px',
+                                    height: ((ifInfo.else.start.line - ifInfo.if.start.line - 1) * 38) + 'px'
+                                }"></div>
+                            <div class="if-link" :style="{
+                                    left: (ifInfo.else.start.row * 7) + 'px', 
+                                    top: ((ifInfo.else.start.line + 1) * 38 - 5) + 'px',
+                                    height:((ifInfo.endif.start.line - ifInfo.else.start.line - 1) * 38) + 'px'
+                                }"></div>
+                        </div>
+                        <div v-if="!ifInfo.else">
+                            <div class="if-link" :style="{
+                                    left: (ifInfo.if.start.row * 7) + 'px', 
+                                    top: ((ifInfo.if.start.line + 1) * 38 - 5) + 'px',
+                                    height: ((ifInfo.endif.start.line - ifInfo.if.start.line - 1) * 38) + 'px'
+                                }"></div>
+                        </div>
+                    </div>
+                    <div v-for="(jumpInfo, i) in jumpTable.jumpMap" @mouseenter="highlights(jumpInfo)">
+                        <div :class="['if-link', 'link-color-' + (i+1)]" :style="{
+                                left: ((mapLineLength + 4 * (i + 1) ) * 7) + 'px', 
+                                top: ((Math.min(jumpInfo.jump.start.line, jumpInfo.label.start.line)) * 38 + 14) + 'px',
+                                height: ((Math.abs(jumpInfo.jump.start.line - jumpInfo.label.start.line)) * 38 + 4)  + 'px'
+                            }"></div>
+                        <div :class="['if-link', 'link-color-' + (i+1)]" :style="{
+                                left: ((jumpInfo.jump.end.row + 2)* 7) + 'px', 
+                                top: (jumpInfo.jump.end.line * 38 + 14) + 'px',
+                                width: ((Math.abs(jumpInfo.jump.end.row - mapLineLength) + 4 * (i + 1) - 2) * 7) + 'px'
+                            }"></div>
+                        <div :class="['if-link', 'link-color-' + (i+1)]" :style="{
+                                left: ((jumpInfo.label.end.row + 2)* 7) + 'px', 
+                                top: (jumpInfo.label.end.line * 38 + 14) + 'px',
+                                width: ((Math.abs(jumpInfo.label.end.row - mapLineLength) + 4 * (i + 1) - 2) * 7) + 'px'
+                            }"></div>
+                    </div>
+
+                </div>
+
+                <div class="lines">
+                    <div v-for="(line, idx) in lines" class="line">
+                        <div class="line-number">{{ idx }}</div>
+                        <div class="line-content">
+                            &nbsp;
+                            <div v-for="token in line" :class='["token", token.error && "error"]' :style="{left: (token.pos.row * 7) + 'px'}"
+                                @click="showNodeInfo(token)">
+                                <div class="token-info">{{token.index}}</div>{{token.content}}</div>
+                            <div v-if="originLines[idx].highlightRange !== undefined" :class='["token", "ast-range"]'
+                                :style="{left: (originLines[idx].highlightRange[0] * 7) + 'px', 
+                        width: (originLines[idx].highlightRange[1] * 7) + 'px'}">&nbsp;</div>
+                        </div>
                     </div>
                 </div>
+
             </div>
             <div class="col-sm-6">
-
+                <div v-for="(ast, idx) in astInfo" class="line" @mouseenter="showAstRange(ast)">
+                    {{ Array(idx + 1).join('&nbsp;') + '->' + astToString(ast) }}
+                </div>
             </div>
         </div>
     </div>

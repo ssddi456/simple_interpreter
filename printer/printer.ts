@@ -28,3 +28,36 @@ export function astTreeToLines( ast: Ast[]): Ast[]{
     // so i should find a way to flatten ast tree
     return lines;
 }
+
+export interface LineInfo {
+    length: number;
+    startOffset: number;
+    endOffset: number;
+    highlightRange: [number, number] | undefined;
+};
+export function makeLineInfo(content: string): LineInfo[] {
+    const ret: LineInfo[] = [];
+    let index = 0;
+
+    while (index != -1){
+        const nextLineEnd = content.indexOf('\n', index);
+        if(nextLineEnd != -1) {
+            ret.push({
+                length: nextLineEnd  - index,
+                startOffset: index,
+                endOffset: nextLineEnd,
+                highlightRange: undefined,
+            });
+        } else {
+            ret.push({
+                length: content.length - index,
+                startOffset: index,
+                endOffset: content.length,
+                highlightRange: undefined,
+            });
+            return ret;
+        }
+        index = nextLineEnd + 1;
+    }
+    return ret;
+}
