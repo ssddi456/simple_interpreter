@@ -2,6 +2,8 @@ import { tokenize, makeTokenizerContext, Pos, Token } from "../parser/tokenizer"
 import { tokensToLines, makeLineInfo, LineInfo } from "../printer/printer";
 import { makeParserContext, makeAst, Ast, JumpTable, makeJumpTable, JumpInfo, IfInfo } from "../parser/parser_with_jump";
 import { walk } from "../walker/walker_with_jump";
+import { makeInterpreterContext, makeSevenBHContext, interpreter, SevenBHMapMaker, SevenBHObject, loadSevenBHContext } from "../interpreter/interpreter_with_jump";
+import { level1 } from "../data/levels";
 
 const contents = [`a:
 b:
@@ -31,11 +33,14 @@ jump c
     step nw,w,sw,n,s,ne,e,se
     jump b
 endif
+`, `step w
+step w
+step w
 `];
 
 
 
-const content = contents[0];
+const content = contents[2];
 const originLines = makeLineInfo(content);
 console.log(originLines);
 
@@ -47,6 +52,10 @@ const lines = tokensToLines(tokens);
 
 const parserContext = makeParserContext(ctx, tokens);
 
+const interpreterContext = makeInterpreterContext();
+const sevenBHContext = loadSevenBHContext(level1);
+
+
 const infos = {
     ast: [] as Ast[],
     jumpTable: {} as JumpTable,
@@ -54,6 +63,48 @@ const infos = {
 
 const mainVm = new Vue({
     el: '#main',
+    mixins: [{
+        data() {
+            return {
+                currentBush: SevenBHMapMaker.floor,
+                SevenBHMapMaker,
+                sevenBHContext,
+            };
+        },
+        methods: {
+            getCellClass(cell: SevenBHObject) {
+                if (cell.type == SevenBHMapMaker.floor) {
+                    for (let i = 0; i < cell.has.length; i++) {
+                        const element = cell.has[i];
+                        if (element.type == SevenBHMapMaker.datacube) {
+                            return SevenBHMapMaker[SevenBHMapMaker.datacube];
+                        } else if (element.type == SevenBHMapMaker.worker) {
+                            return SevenBHMapMaker[SevenBHMapMaker.worker];
+                        }
+                    } 
+                }
+                return SevenBHMapMaker[cell.type];
+            },
+            getCellContent(cell: SevenBHObject) {
+                if (cell.type == SevenBHMapMaker.floor) {
+                    for (let i = 0; i < cell.has.length; i++) {
+                        const element = cell.has[i];
+
+                        if (element.type == SevenBHMapMaker.datacube) {
+                            return element.value;
+                        } else if (element.type == SevenBHMapMaker.worker) {
+                            if (element.holds) {
+                                return element.holds.value;
+                            }
+                        }
+                    }
+                }
+            },
+            mapInfo() {
+                return JSON.stringify(this.sevenBHContext, null, 2);
+            }
+        }
+    }],
     data: {
         lines: lines,
         astInfo: [],
@@ -62,19 +113,20 @@ const mainVm = new Vue({
             return Math.max(max, line.length);
         }, 0),
         jumpTable: {},
+        interpreterContext,
     },
     methods: {
         showNodeInfo: function (node: Token) {
             const ast = findNodeByPos(infos.ast, node.pos.offset);
             mainVm.astInfo = ast;
         },
-        removeAllHighlightLine(){
+        removeAllHighlightLine() {
             for (let i = 0; i < originLines.length; i++) {
                 const element = originLines[i];
                 removeHighlightLine(element);
             }
         },
-        showAstRange: function (ast: Ast, dontRemove = false ) {
+        showAstRange: function (ast: Ast, dontRemove = false) {
             for (let i = 0; i < originLines.length; i++) {
                 const element = originLines[i];
                 if (i > ast.start.line && i < ast.end.line) {
@@ -123,6 +175,9 @@ const mainVm = new Vue({
             'endif' in linkInfo && this.showAstRange(linkInfo.endif, true);
             'jump' in linkInfo && this.showAstRange(linkInfo.jump, true);
             'label' in linkInfo && this.showAstRange(linkInfo.label, true);
+        },
+        next() {
+            interpreter(infos.ast, this.interpreterContext, this.sevenBHContext, this.jumpTable);
         }
     }
 });

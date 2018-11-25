@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <link rel="stylesheet" type="text/css" href="http://cdn.staticfile.org/twitter-bootstrap/3.0.0/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.css">
 </head>
 
 <body>
@@ -32,6 +32,15 @@
         .line-content {
             display: inline-block;
             position: relative;
+        }
+
+        .line-indicator {
+            display: inline-block;
+            width: 1em;
+        }
+
+        .line-indicator.active {
+            background-color: rgb(13, 81, 136);
         }
 
         .token {
@@ -103,9 +112,61 @@
         .links .link-color-5 {
             border-color: rgba(128, 223, 255, 0.5);
         }
+
+        .cell-line {
+            height: 30px;
+        }
+
+        .cell {
+            width: 30px;
+            display: inline-block;
+            border-left: 1px solid rgb(102, 102, 102);
+            border-bottom: 1px solid rgb(102, 102, 102);
+        }
+
+        .cell::after {
+            content: '';
+            margin-top: 100%;
+            display: block;
+        }
+
+        .cell.worker {
+            background-color: rgb(114, 18, 117);
+        }
+
+        .cell.floor {
+            background-color: rgb(78, 78, 78);
+        }
+
+        .cell.datacube {
+            background-color: rgb(19, 175, 79);
+        }
+
+        .cell.hole {
+            background-color: rgb(15, 15, 15);
+        }
+
+        .cell.grinder {
+            background-color: rgb(194, 52, 9);
+        }
+
+        .cell.generator {
+            background-color: rgb(27, 255, 198);
+        }
+
+        .cell.wall {
+            background-color: rgb(39, 39, 39);
+        }
     </style>
     <div class="container-fluid" id="main">
-        <div class="row">
+        <div class="container-fluid">
+            <div class="col-sm-12">
+                <div class="btn-group">
+                    <button class="btn" @click="next">next</button>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
             <div class="col-sm-6">
                 <div class="links">
                     <div v-for="ifInfo in jumpTable.ifMap" @mouseenter="highlights(ifInfo)">
@@ -151,16 +212,18 @@
 
                 <div class="lines">
                     <div v-for="(line, idx) in lines" class="line">
+                        <div class="line-indicator" :class='[idx == interpreterContext.line && "active"]'>&nbsp;</div>
                         <div class="line-number">{{ idx }}</div>
                         <div class="line-content">
                             &nbsp;
                             <div v-for="token in line" :class='["token", token.error && "error"]' :style="{left: (token.pos.row * 7) + 'px'}"
-                                @click="showNodeInfo(token)">
-                                <div class="token-info">{{token.index}}</div>{{token.content}}</div>
+                                @click="showNodeInfo(token)" v-html='"<div class=\"token-info\">"+token.index+"</div>"+token.content'>
+                            </div>
                             <div v-if="originLines[idx].highlightRange !== undefined" :class='["token", "ast-range"]'
                                 :style="{left: (originLines[idx].highlightRange[0] * 7) + 'px', 
                         width: (originLines[idx].highlightRange[1] * 7) + 'px'}">&nbsp;</div>
                         </div>
+
                     </div>
                 </div>
 
@@ -169,6 +232,25 @@
                 <div v-for="(ast, idx) in astInfo" class="line" @mouseenter="showAstRange(ast)">
                     {{ Array(idx + 1).join('&nbsp;') + '->' + astToString(ast) }}
                 </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="col-sm-12">
+                <div class="btn-group">
+                    <div :class='["btn btn-default", currentBush == type && "active"]' v-for="(type, key) in SevenBHMapMaker"
+                        @click="currentBush = type" v-if="typeof type== 'number'">{{key}}</div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="row">
+                    <div class="cell-line" v-for="row in sevenBHContext.map">
+                        <div :class="['cell', getCellClass(cell)]" v-for="cell in row" @click="cell.type = currentBush"
+                        :title="cell.type" >{{getCellContent(cell)}}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <pre v-html="mapInfo()"></pre>
             </div>
         </div>
     </div>
