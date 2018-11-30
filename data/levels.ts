@@ -542,6 +542,7 @@ export const level1: SevenBHContext = {
                     "row": 4,
                     "line": 7
                 },
+                "value": 30,
                 "type": 2
             },
             {

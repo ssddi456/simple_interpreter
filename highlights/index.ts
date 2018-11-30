@@ -33,9 +33,13 @@ jump c
     step nw,w,sw,n,s,ne,e,se
     jump b
 endif
-`, `step w
-step w
-step w
+`, `step s
+step s
+step s
+step s
+pickup c
+step s
+drop
 `];
 
 
@@ -73,30 +77,24 @@ const mainVm = new Vue({
         },
         methods: {
             getCellClass(cell: SevenBHObject) {
-                if (cell.type == SevenBHMapMaker.floor) {
-                    for (let i = 0; i < cell.has.length; i++) {
-                        const element = cell.has[i];
-                        if (element.type == SevenBHMapMaker.datacube) {
-                            return SevenBHMapMaker[SevenBHMapMaker.datacube];
-                        } else if (element.type == SevenBHMapMaker.worker) {
-                            return SevenBHMapMaker[SevenBHMapMaker.worker];
-                        }
-                    } 
+                if (cell.type == SevenBHMapMaker.datacube) {
+                    return SevenBHMapMaker[SevenBHMapMaker.datacube];
+                } else if (cell.type == SevenBHMapMaker.worker) {
+                    if(!cell.holds){
+                        return SevenBHMapMaker[SevenBHMapMaker.worker];
+                    } else {
+                        return 'worker-with-datacube';
+                    }
                 }
+
                 return SevenBHMapMaker[cell.type];
             },
             getCellContent(cell: SevenBHObject) {
-                if (cell.type == SevenBHMapMaker.floor) {
-                    for (let i = 0; i < cell.has.length; i++) {
-                        const element = cell.has[i];
-
-                        if (element.type == SevenBHMapMaker.datacube) {
-                            return element.value;
-                        } else if (element.type == SevenBHMapMaker.worker) {
-                            if (element.holds) {
-                                return element.holds.value;
-                            }
-                        }
+                if (cell.type == SevenBHMapMaker.datacube) {
+                    return cell.value;
+                } else if (cell.type == SevenBHMapMaker.worker) {
+                    if (cell.holds) {
+                        return cell.holds.value;
                     }
                 }
             },

@@ -142,8 +142,9 @@ export function loadSevenBHContext(context: SevenBHContext): SevenBHContext {
             case SevenBHMapMaker.datacube:
                 const datacube = makeSevenBHDataCube();
                 datacube.pos = {
-                    ...y.pos!
+                    ...y.pos!,
                 };
+                datacube.value = y.value;
                 context.datacubes.push(datacube);
                 floor = (y as any) as SevenBHFloor;
                 floor.type = SevenBHMapMaker.floor;
@@ -262,6 +263,12 @@ export function doCall(ast: AstCall, context: InterpreterContext, mapContext: Se
         case 'step':
             doStepCall(params, context, mapContext);
             break;
+        case 'pickup':
+            doPickupCall(params, context, mapContext);
+            break;
+        case 'drop':
+            doDropCall(params, context, mapContext);
+            break;
 
         default:
             break;
@@ -273,13 +280,47 @@ export function doStepCall(params: AstExpression[], context: InterpreterContext,
     const worker = mapContext.workers[0];
     const cell = getValue(actualDirection, context, mapContext, null as any) as SevenBHObject | undefined;
     const currentCell = getDirectionValue('c', mapContext)! as SevenBHFloor;
-    console.log(cell);
+
     if (cell && cell.type == SevenBHMapMaker.floor) {
         cell.has.push(worker);
         currentCell.has.splice(currentCell.has.indexOf(worker), 1);
         worker.pos = { ...cell.pos! };
     }
 }
+
+export function doPickupCall(params: AstExpression[], context: InterpreterContext, mapContext: SevenBHContext) {
+    const actualDirection = params[Math.floor(Math.random() * params.length)];
+    const worker = mapContext.workers[0];
+    const cell = getValue(actualDirection, context, mapContext, null as any) as SevenBHObject | undefined;
+    if (cell && cell.type == SevenBHMapMaker.floor) {
+        if (worker.holds) {
+            throw new Error('i hold some things');
+        }
+        if (!cell.has.some(x => x.type == SevenBHMapMaker.datacube)) {
+            throw new Error('nothing to pickup');
+        }
+        var datacube = cell.has.filter(x => x.type == SevenBHMapMaker.datacube)[0];
+        cell.has.splice(cell.has.indexOf(datacube), 1);
+        worker.holds = datacube as SevenBHDataCube;
+    }
+}
+export function doDropCall(params: AstExpression[], context: InterpreterContext, mapContext: SevenBHContext) {
+    const worker = mapContext.workers[0];
+    const currentCell = getDirectionValue('c', mapContext)! as SevenBHFloor;
+
+    if (currentCell && currentCell.type == SevenBHMapMaker.floor) {
+        if (!worker.holds) {
+            throw new Error('nothing to drop');
+        }
+        if (currentCell.has.some(x => x.type == SevenBHMapMaker.datacube)) {
+            throw new Error('i cannot drop here');
+        }
+        var datacube = worker.holds;
+        worker.holds = undefined;
+        currentCell.has.push(datacube);
+    }
+}
+
 
 export function getValue(ast: Ast, context: InterpreterContext, mapContext: SevenBHContext, jumpTable: JumpTable, ): any {
     switch (ast.type) {

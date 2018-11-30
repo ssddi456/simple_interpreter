@@ -114,32 +114,20 @@
         }
 
         .cell-line {
-            height: 30px;
+            height: 40px;
         }
 
         .cell {
-            width: 30px;
+            width: 40px;
+            height: 40px;
             display: inline-block;
             border-left: 1px solid rgb(102, 102, 102);
             border-bottom: 1px solid rgb(102, 102, 102);
-        }
-
-        .cell::after {
-            content: '';
-            margin-top: 100%;
-            display: block;
-        }
-
-        .cell.worker {
-            background-color: rgb(114, 18, 117);
+            position: relative;
         }
 
         .cell.floor {
             background-color: rgb(78, 78, 78);
-        }
-
-        .cell.datacube {
-            background-color: rgb(19, 175, 79);
         }
 
         .cell.hole {
@@ -156,6 +144,44 @@
 
         .cell.wall {
             background-color: rgb(39, 39, 39);
+        }
+
+        .cell .worker {
+            z-index: 2;
+            /* 37 * 57 */
+            width: 30px;
+            height: 57px;
+            margin-top: -20px;
+            margin-left: 5px;
+            background: url(./human.png) center no-repeat;
+            background-size: contain;
+            position: absolute;
+        }
+
+        .cell .worker-with-datacube {
+            z-index: 2;
+            /* 39 * 74 */
+            width: 35px;
+            height: 70px;
+            margin-top: -24px;
+            background-image: url(./human_with_datacube.png);
+            background-size: contain;
+            position: absolute;
+        }
+
+        .cell .datacube {
+            z-index: 3;
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            margin: 10px;
+            background-color: rgb(178, 212, 125);
+            border-bottom: 3px solid rgb(3, 10, 3);
+            box-shadow: 0 2px 0 2px rgba(18, 23, 26, 0.3);
+            text-align: center;
+            line-height: 22px;
+            font-weight: bolder;
+            font-size: 14px;
         }
     </style>
     <div class="container-fluid" id="main">
@@ -244,8 +270,13 @@
             <div class="col-sm-6">
                 <div class="row">
                     <div class="cell-line" v-for="row in sevenBHContext.map">
-                        <div :class="['cell', getCellClass(cell)]" v-for="cell in row" @click="cell.type = currentBush"
-                        :title="cell.type" >{{getCellContent(cell)}}</div>
+                        <div :class="['cell', getCellClass(cell)]" v-for="cell in row" @click="cell.type = currentBush">
+                            <div v-if="cell.type == SevenBHMapMaker.floor">
+                                <div v-for="item in cell.has">
+                                    <div :class="getCellClass(item)">{{getCellContent(item)}}</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
