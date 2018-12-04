@@ -1,5 +1,5 @@
 import { Ast, AstBlock, AstBinary, AstIdentifier, AstIf, AstTrinary } from "../parser/parser";
-import { caculateOperators, CaculateOperator, conpareOperators, ConpareOperator, logicOperators, LogicOperator } from "../parser/tokenizer";
+import { caculateOperators, CaculateOperator, compareOperators, CompareOperator, logicOperators, LogicOperator } from "../parser/tokenizer";
 
 
 interface SymbolMap {
@@ -49,7 +49,7 @@ export function getBinaneryValue(ast: AstBinary, ctx: InterpreterContext): any {
             case '|':
                 return left | right;
         }
-    } else if (conpareOperators.indexOf(ast.operator as ConpareOperator) != -1) {
+    } else if (compareOperators.indexOf(ast.operator as CompareOperator) != -1) {
         const left = getValue(ast.left, ctx);
         const right = getValue(ast.right, ctx);
         switch (ast.operator) {

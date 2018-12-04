@@ -367,7 +367,7 @@ export function makeExpressionAst(ctx: ParserContext, tokens: Token[]): AstExpre
                 makeExpressionAst(cloneCtx(ctx), tokens.slice(1)));
         } else if ('nearest' == tokenContent) {
             const secondTokenContent = getContent(tokens[1]);
-            if (objectType.indexOf(secondTokenContent) !== -1) {
+            if (objectTypes.indexOf(secondTokenContent) !== -1) {
                 ret = makeAstCall(startPos, endPos, makeAstIdentifierFromToken(tokens[0]), [makeAstIdentifierFromToken(tokens[1])]);
             } else {
                 throw new ParseError('illegal expression', tokens[1]);
@@ -399,16 +399,24 @@ const preservedWords = [
     'if',
     'endif',
 
+];
+
+export const memories = [
     'mem1',
     'mem2',
     'mem3',
     'mem4',
 ];
 
-const buildInFunctions = [
+export const voidFunctions = [
     'step',
     'pickup',
     'drop',
+    'write',
+];
+
+export const valuedFunctions = [
+    'nearest',
 ];
 
 const singleWordDirectives = [
@@ -417,10 +425,12 @@ const singleWordDirectives = [
     'endif',
 ];
 
-const objectType = [
+export const objectTypes = [
     'datacube',
-    'wall'
-]
+    'worker',
+    'nothing',
+    'wall',
+];
 
 export function makeListAst(tokens: Token[]): AstExpression[] {
     if (!tokens.length) {
@@ -459,7 +469,7 @@ export function makeAst(ctx: ParserContext): Ast[] {
         if (currentLineTokens.length == 2 && labelMaker == secondTokenContent) {
             container.push(makeAstLabel(startPos, getPos(currentLineTokens[1]), currentLineTokens[0].content));
             ctx.index += 2;
-        } else if (buildInFunctions.indexOf(tokenContent) != -1) {
+        } else if (voidFunctions.indexOf(tokenContent) != -1) {
             // other directions
             container.push(makeAstCall(startPos, endPos,
                 makeAstIdentifier(startPos, createEndPosFromToken(ctx.tokenizerCtx, currentLineTokens[0]), tokenContent),
@@ -503,6 +513,11 @@ export interface IfInfo {
     else?: AstElse;
     endif: AstEndIf;
 }
+export interface IfPosInfo {
+    if: AstIf;
+    else?: number;
+    endif: number;
+}
 export interface JumpInfo{
     jump: AstJump;
     label: AstLabel;
@@ -510,16 +525,22 @@ export interface JumpInfo{
 
 export interface JumpTable {
     labelMap: {
-        [k: string]: AstLabel
+        [k: string]: AstLabel,
     };
+    labelPosMap: {
+        [k: string]: number,
+    },
     ifMap: Array<IfInfo>;
+    ifPosMap: Array<IfPosInfo>
     jumpMap: Array<JumpInfo>;
 }
 
 export function makeJumpTable(asts: Ast[]): JumpTable {
     const ret: JumpTable = {
         labelMap: {},
+        labelPosMap: {},
         ifMap: [],
+        ifPosMap: [],
         jumpMap: [],
     };
 
@@ -535,15 +556,19 @@ export function makeJumpTable(asts: Ast[]): JumpTable {
         currentIf = ret;
     }
 
-    function endIfStack(ast: AstEndIf): IfInfo {
-        const ret = currentIf;
+    function endIfStack(ast: AstEndIf) {
         if (currentIf == undefined) {
             throw new ParseError('illegal endif element', ast);
         }
         currentIf.endif = ast;
         ifStack.pop();
+        ret.ifMap.push(currentIf as IfInfo);
+        ret.ifPosMap.push({
+            if: currentIf.if!,
+            else: currentIf.else && asts.indexOf(currentIf.else),
+            endif: asts.indexOf(currentIf.endif)
+        });
         currentIf = ifStack[ifStack.length - 1];
-        return ret as IfInfo;
     }
 
     const jumps: AstJump[] = [];
@@ -551,6 +576,7 @@ export function makeJumpTable(asts: Ast[]): JumpTable {
         const element = asts[i];
         if (element.type == 'label') {
             ret.labelMap[element.name] = element;
+            ret.labelPosMap[element.name] = i;
         } else if (element.type == 'if') {
             startIfStack(element);
         } else if (element.type == 'else') {
@@ -560,7 +586,7 @@ export function makeJumpTable(asts: Ast[]): JumpTable {
                 (currentIf as Partial<IfInfo>).else = element;
             }
         } else if (element.type == 'endif') {
-            ret.ifMap.push(endIfStack(element));
+            endIfStack(element);
         } else if(element.type =='jump'){
             jumps.push(element);
         }

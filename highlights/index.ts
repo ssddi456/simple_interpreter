@@ -1,9 +1,11 @@
-import { tokenize, makeTokenizerContext, Pos, Token } from "../parser/tokenizer";
+import { tokenize, makeTokenizerContext, Token } from "../parser/tokenizer";
 import { tokensToLines, makeLineInfo, LineInfo } from "../printer/printer";
-import { makeParserContext, makeAst, Ast, JumpTable, makeJumpTable, JumpInfo, IfInfo } from "../parser/parser_with_jump";
+import { Ast, JumpInfo, IfInfo } from "../parser/parser_with_jump";
 import { walk } from "../walker/walker_with_jump";
-import { makeInterpreterContext, makeSevenBHContext, interpreter, SevenBHMapMaker, SevenBHObject, loadSevenBHContext } from "../interpreter/interpreter_with_jump";
-import { level1 } from "../data/levels";
+import { interpreter } from "../interpreter/interpreter_with_jump";
+import { player_mixin } from "./player_mixin";
+import { makeContextMgr } from "./context_mgr_mixin";
+import { edit_mixin } from "./edit_mixin";
 
 const contents = [`a:
 b:
@@ -40,6 +42,14 @@ step s
 pickup c
 step s
 drop
+`,
+`a:
+if c != datacube:
+    step s
+    jump a
+pickup c
+step s
+drop
 `];
 
 
@@ -47,62 +57,14 @@ drop
 const content = contents[2];
 const originLines = makeLineInfo(content);
 console.log(originLines);
-
 const ctx = makeTokenizerContext(content);
-
 const tokens = tokenize(ctx);
-
 const lines = tokensToLines(tokens);
 
-const parserContext = makeParserContext(ctx, tokens);
 
-const interpreterContext = makeInterpreterContext();
-const sevenBHContext = loadSevenBHContext(level1);
-
-
-const infos = {
-    ast: [] as Ast[],
-    jumpTable: {} as JumpTable,
-};
-
-const mainVm = new Vue({
+new Vue({
     el: '#main',
-    mixins: [{
-        data() {
-            return {
-                currentBush: SevenBHMapMaker.floor,
-                SevenBHMapMaker,
-                sevenBHContext,
-            };
-        },
-        methods: {
-            getCellClass(cell: SevenBHObject) {
-                if (cell.type == SevenBHMapMaker.datacube) {
-                    return SevenBHMapMaker[SevenBHMapMaker.datacube];
-                } else if (cell.type == SevenBHMapMaker.worker) {
-                    if(!cell.holds){
-                        return SevenBHMapMaker[SevenBHMapMaker.worker];
-                    } else {
-                        return 'worker-with-datacube';
-                    }
-                }
-
-                return SevenBHMapMaker[cell.type];
-            },
-            getCellContent(cell: SevenBHObject) {
-                if (cell.type == SevenBHMapMaker.datacube) {
-                    return cell.value;
-                } else if (cell.type == SevenBHMapMaker.worker) {
-                    if (cell.holds) {
-                        return cell.holds.value;
-                    }
-                }
-            },
-            mapInfo() {
-                return JSON.stringify(this.sevenBHContext, null, 2);
-            }
-        }
-    }],
+    mixins: [makeContextMgr(ctx, tokens), player_mixin, edit_mixin],
     data: {
         lines: lines,
         astInfo: [],
@@ -111,12 +73,11 @@ const mainVm = new Vue({
             return Math.max(max, line.length);
         }, 0),
         jumpTable: {},
-        interpreterContext,
     },
     methods: {
         showNodeInfo: function (node: Token) {
-            const ast = findNodeByPos(infos.ast, node.pos.offset);
-            mainVm.astInfo = ast;
+            const ast = findNodeByPos(this.infos.ast, node.pos.offset);
+            this.astInfo = ast;
         },
         removeAllHighlightLine() {
             for (let i = 0; i < originLines.length; i++) {
@@ -174,24 +135,11 @@ const mainVm = new Vue({
             'jump' in linkInfo && this.showAstRange(linkInfo.jump, true);
             'label' in linkInfo && this.showAstRange(linkInfo.label, true);
         },
-        next() {
-            interpreter(infos.ast, this.interpreterContext, this.sevenBHContext, this.jumpTable);
-        }
+        tick() {
+            interpreter(this.infos.ast, this.interpreterContext, this.sevenBHContext, this.jumpTable);
+        },
     }
 });
-
-
-try {
-    const ast = makeAst(parserContext);
-    infos.ast = ast;
-    infos.jumpTable = makeJumpTable(ast);
-    mainVm.jumpTable = infos.jumpTable;
-} catch (error) {
-    console.log(error);
-    error.token.error = 1;
-}
-
-console.log(infos.jumpTable);
 
 function findNodeByPos(ast: Ast[], offset: number): Ast[] {
     let target: Ast[] = [];

@@ -1,5 +1,6 @@
-import { Ast, JumpTable, AstIdentifier, AstBinary, AstJump, AstIf, AstCall } from "../parser/parser_with_jump";
+import { Ast, JumpTable, AstIdentifier, AstBinary, AstJump, AstIf, AstCall, objectTypes, memories } from "../parser/parser_with_jump";
 import { AstExpression } from "../parser/parser";
+import { compareOperators, BinaryOperator, CompareOperator, logicOperators, LogicOperator } from "../parser/tokenizer";
 
 export interface Pos {
     line: number;
@@ -105,6 +106,11 @@ export interface SevenBHContext {
     width: number,
     height: number,
 }
+export interface SevenBHLevel {
+    map: SevenBHObject[][];
+    width: number,
+    height: number,
+}
 
 export function makeSevenBHContext(width: number, height: number): SevenBHContext {
     const map: SevenBHObject[][] = [];
@@ -126,37 +132,54 @@ export function makeSevenBHContext(width: number, height: number): SevenBHContex
     };
 }
 
-export function loadSevenBHContext(context: SevenBHContext): SevenBHContext {
-    context.map.forEach(x => x.forEach(y => {
-        switch (y.type) {
-            case SevenBHMapMaker.worker:
-                const worker = makeSevenBHWorker();
-                worker.pos = {
-                    ...y.pos!
-                };
-                context.workers.push(worker);
-                let floor = (y as any) as SevenBHFloor;
-                floor.type = SevenBHMapMaker.floor;
-                (floor.has = [] as SevenBHInteractivableObject[]).push(worker);
-                break;
-            case SevenBHMapMaker.datacube:
-                const datacube = makeSevenBHDataCube();
-                datacube.pos = {
-                    ...y.pos!,
-                };
-                datacube.value = y.value;
-                context.datacubes.push(datacube);
-                floor = (y as any) as SevenBHFloor;
-                floor.type = SevenBHMapMaker.floor;
-                (floor.has = [] as SevenBHInteractivableObject[]).push(datacube);
-                break;
-            case SevenBHMapMaker.floor:
-                y.has = [] as SevenBHInteractivableObject[];
-            default:
-                break;
-        }
-    }));
-    return context;
+export function loadSevenBHContext(context: SevenBHLevel): SevenBHContext {
+    const new_context = makeSevenBHContext(context.width, context.height);
+    new_context.map = [];
+
+    context.map.forEach(x => {
+        const new_row = [] as SevenBHObject[];
+        new_context.map.push(new_row);
+        x.forEach(y => {
+            const z: SevenBHObject = {
+                ...y,
+
+            };
+            new_row.push(z);
+            switch (z.type) {
+                case SevenBHMapMaker.worker:
+                    const worker = makeSevenBHWorker();
+                    worker.pos = {
+                        ...z.pos!
+                    };
+                    new_context.workers.push(worker);
+                    let floor = (z as any) as SevenBHFloor;
+                    floor.type = SevenBHMapMaker.floor;
+                    (floor.has = [] as SevenBHInteractivableObject[]).push(worker);
+                    break;
+                case SevenBHMapMaker.datacube:
+                    const datacube = makeSevenBHDataCube();
+                    datacube.pos = {
+                        ...z.pos!,
+                    };
+                    datacube.value = z.value;
+                    new_context.datacubes.push(datacube);
+                    floor = (z as any) as SevenBHFloor;
+                    floor.type = SevenBHMapMaker.floor;
+                    (floor.has = [] as SevenBHInteractivableObject[]).push(datacube);
+                    break;
+                case SevenBHMapMaker.floor:
+                    z.has = [] as SevenBHInteractivableObject[];
+                    z.pos = {
+                        ...y.pos!
+                    };
+                    break;
+
+                default:
+                    break;
+            }
+        })
+    });
+    return new_context;
 }
 
 export interface InterpreterContext {
@@ -164,6 +187,11 @@ export interface InterpreterContext {
     tokenIndex: number;
     currentToken: Ast | undefined;
     memories: Array<number | SevenBHBaseObject>;
+    movedInStep: boolean;
+    beforeStep(): void;
+    afterStep(): void;
+    nextLine(): void;
+    goToLine(line: number): void;
 }
 
 export function makeInterpreterContext(): InterpreterContext {
@@ -171,17 +199,144 @@ export function makeInterpreterContext(): InterpreterContext {
         line: 0,
         tokenIndex: 0,
         currentToken: undefined,
-        memories: []
+        memories: [],
+        movedInStep: false,
+        beforeStep() {
+            this.movedInStep = true;
+        },
+        afterStep() {
+            if (!this.movedInStep) {
+                this.nextLine();
+            }
+        },
+        nextLine() {
+            this.currentToken = undefined;
+            this.tokenIndex += 1;
+        },
+        goToLine(line: number) {
+            this.movedInStep = true;
+            this.currentToken = undefined;
+            this.tokenIndex = line;
+        }
     };
 }
 
+function isMyitem(ast: Ast) {
+    return ast.type === 'identifier' && ast.name === 'myitem';
+}
+
+
+
+function isObjectType(ast: Ast) {
+    return ast.type === 'identifier' && objectTypes.indexOf(ast.name) !== -1;
+}
+
+function isTypeCheck(ast: AstBinary): boolean {
+    const ops = ast.operator;
+    if ((ops === '==' || ops !== '!=')
+        && (isObjectType(ast.left) || isObjectType(ast.right))
+    ) {
+        return true;
+    }
+    return false;
+}
+function isValueCompare(ast: AstBinary): boolean {
+    const ops = ast.operator;
+    if (compareOperators.indexOf(ops as CompareOperator) !== -1) {
+        return true;
+    } else {
+        return false
+    }
+}
+
+function getSevenBHObjectValue(obj: SevenBHObject): number | undefined {
+    if (obj) {
+        if (obj.type == SevenBHMapMaker.datacube) {
+            return obj.value;
+        }
+    }
+}
+
+function compareWithValue(value1: number | undefined, ops: CompareOperator, value: number | undefined) {
+    switch (ops) {
+        case '!=':
+            return value1 != value;
+        case '!==':
+            return value1 !== value;
+        case '==':
+            return value1 == value;
+        case '<=':
+            return value1! <= value!;
+        case '<':
+            return value1! < value!;
+        case '>':
+            return value1! > value!;
+        case '>=':
+            return value1! >= value!;
+    }
+}
+function LogicOperator(value1: any, ops: LogicOperator, value: any): boolean {
+    switch (ops) {
+        case 'and':
+        case '&&':
+            return value1 && value;
+        case 'or':
+        case '||':
+            return value1 || value;
+    }
+}
 
 export function getBinaneryValue(ast: AstBinary, context: InterpreterContext, mapContext: SevenBHContext, jumpTable: JumpTable): any {
+    const ops = ast.operator;
 
+    if (isTypeCheck(ast)) {
+        let obj: SevenBHObject;
+        let type: string;
+        if (isObjectType(ast.left)) {
+            type = (ast.left as AstIdentifier).name;
+            obj = getIdentifierValue(ast.right as AstIdentifier, context, mapContext) as SevenBHObject;
+        } else {
+            type = (ast.right as AstIdentifier).name;
+            obj = getIdentifierValue(ast.left as AstIdentifier, context, mapContext) as SevenBHObject;
+        }
+        if (type === 'nothing') {
+            return !obj || obj.type == SevenBHMapMaker.floor;
+        }
+        return obj.type == SevenBHMapMaker[type];
+    } else if (isValueCompare(ast)) {
+        let obj: SevenBHBaseObject;
+        if (ast.left.type == 'value') {
+            compareWithValue(
+                getSevenBHObjectValue(getValue(ast.right, context, mapContext, jumpTable)),
+                ops as CompareOperator,
+                ast.left.value as number);
+        } else if (ast.right.type == 'value') {
+            compareWithValue(
+                getSevenBHObjectValue(getValue(ast.left, context, mapContext, jumpTable)),
+                ops as CompareOperator,
+                ast.right.value as number);
+        } else {
+            compareWithValue(
+                getSevenBHObjectValue(getValue(ast.left, context, mapContext, jumpTable)),
+                ops as CompareOperator,
+                getSevenBHObjectValue(getValue(ast.right, context, mapContext, jumpTable))
+            );
+        }
+    } else if (logicOperators.indexOf(ops as LogicOperator)) {
+        // 这里有点问题
+        return LogicOperator(
+            getValue(ast.left, context, mapContext, jumpTable),
+            ops as LogicOperator,
+            getValue(ast.right, context, mapContext, jumpTable),
+        );
+    }
 }
+
 export function getIdentifierValue(ast: AstIdentifier, context: InterpreterContext, mapContext: SevenBHContext, ): any {
     const name = ast.name;
-    if (name.indexOf('mem') === 0) {
+    if (isMyitem(ast)) {
+        return mapContext.workers[0].holds;
+    } else if (memories.indexOf(name) !== -1) {
         return context.memories[name];
     } else if (posKeywords.indexOf(name as PosKeyword) !== -1) {
         return getDirectionValue(name as PosKeyword, mapContext);
@@ -248,11 +403,22 @@ export function getDirectionValue(name: PosKeyword, mapContext: SevenBHContext) 
 }
 
 export function doIf(ast: AstIf, context: InterpreterContext, mapContext: SevenBHContext, jumpTable: JumpTable, ) {
-
+    if(getValue(ast.expression, context, mapContext, jumpTable)) {
+        context.nextLine();
+    } else {
+        // 这里应该 goto else or endif
+        const ifInfo = jumpTable.ifPosMap.filter( x => x.if == ast)[0];
+        if(ifInfo.else) {
+            context.goToLine(ifInfo.else);
+        } else {
+            context.goToLine(ifInfo.endif);
+        }
+    }
 }
 
 export function doJump(ast: AstJump, context: InterpreterContext, jumpTable: JumpTable, ) {
-
+    const label = jumpTable.labelPosMap[ast.labelName];
+    context.goToLine(label);
 }
 
 export function doCall(ast: AstCall, context: InterpreterContext, mapContext: SevenBHContext) {
@@ -269,7 +435,8 @@ export function doCall(ast: AstCall, context: InterpreterContext, mapContext: Se
         case 'drop':
             doDropCall(params, context, mapContext);
             break;
-
+        case 'write':
+            doWriteCall(params, context, mapContext);
         default:
             break;
     }
@@ -320,6 +487,8 @@ export function doDropCall(params: AstExpression[], context: InterpreterContext,
         currentCell.has.push(datacube);
     }
 }
+export function doWriteCall(params: AstExpression[], context: InterpreterContext, mapContext: SevenBHContext) {
+}
 
 
 export function getValue(ast: Ast, context: InterpreterContext, mapContext: SevenBHContext, jumpTable: JumpTable, ): any {
@@ -348,13 +517,13 @@ function getCurrentToken(ast: Ast[], context: InterpreterContext, ) {
     }
 }
 
-export function interpreter(ast: Ast[], context: InterpreterContext, mapContext: SevenBHContext, jumpTable: JumpTable, ) {
-    getCurrentToken(ast, context);
+export function interpreter(asts: Ast[], context: InterpreterContext, mapContext: SevenBHContext, jumpTable: JumpTable, ) {
+    getCurrentToken(asts, context);
 
     if (context.currentToken) {
+        context.beforeStep();
         getValue(context.currentToken, context, mapContext, jumpTable);
-        context.currentToken = undefined;
-        context.tokenIndex += 1;
-        getCurrentToken(ast, context);
+        context.afterStep();
+        getCurrentToken(asts, context);
     }
 }

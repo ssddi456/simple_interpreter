@@ -1,8 +1,6 @@
-import { SevenBHContext } from "../interpreter/interpreter_with_jump";
+import { SevenBHLevel } from "../interpreter/interpreter_with_jump";
 
-export const level1: SevenBHContext = {
-    "workers": [],
-    "datacubes": [],
+export const level1: SevenBHLevel = {
     "map": [
         [
             {

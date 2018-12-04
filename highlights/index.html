@@ -183,19 +183,81 @@
             font-weight: bolder;
             font-size: 14px;
         }
+        .controls {
+            margin-top:20px;
+        }
     </style>
-    <div class="container-fluid" id="main">
+
+    <nav class="navbar navbar-default">
         <div class="container-fluid">
-            <div class="col-sm-12">
-                <div class="btn-group">
-                    <button class="btn" @click="next">next</button>
-                </div>
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"
+                    aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Brand</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
+                    <li><a href="#">Link</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                            aria-expanded="false">Dropdown <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">Action</a></li>
+                            <li><a href="#">Another action</a></li>
+                            <li><a href="#">Something else here</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#">Separated link</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#">One more separated link</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
             </div>
         </div>
+    </nav>
+
+    <div class="container-fluid" id="main">
+        <div class="nav"></div>
         <div class="container-fluid">
             <div class="col-sm-6">
+                <div class="row cell-map">
+                    <div class="cell-line" v-for="row in sevenBHContext.map">
+                        <div :class="['cell', getCellClass(cell)]" v-for="cell in row" @click="cell.type = currentBush">
+                            <div v-if="cell.type == SevenBHMapMaker.floor">
+                                <div v-for="item in cell.has">
+                                    <div :class="getCellClass(item)">{{getCellContent(item)}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="btn-toolbar controls">
+                        <div class="btn-group">
+                            <button class="btn btn-default" @click="toggleMode">mode:{{mode}}</button>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-default" @click="next">next</button>
+                            <button class="btn btn-default" @click="play">play</button>
+                            <button class="btn btn-default" @click="pause">pause</button>
+                            <button class="btn btn-default" @click="restart">restart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
                 <div class="links">
-                    <div v-for="ifInfo in jumpTable.ifMap" @mouseenter="highlights(ifInfo)">
+                    <div v-for="ifInfo in infos.jumpTable.ifMap" @mouseenter="highlights(ifInfo)">
                         <div v-if="ifInfo.else">
                             <div class="if-link" :style="{
                                     left: (ifInfo.if.start.row * 7) + 'px', 
@@ -216,7 +278,7 @@
                                 }"></div>
                         </div>
                     </div>
-                    <div v-for="(jumpInfo, i) in jumpTable.jumpMap" @mouseenter="highlights(jumpInfo)">
+                    <div v-for="(jumpInfo, i) in infos.jumpTable.jumpMap" @mouseenter="highlights(jumpInfo)">
                         <div :class="['if-link', 'link-color-' + (i+1)]" :style="{
                                 left: ((mapLineLength + 4 * (i + 1) ) * 7) + 'px', 
                                 top: ((Math.min(jumpInfo.jump.start.line, jumpInfo.label.start.line)) * 38 + 14) + 'px',
@@ -249,40 +311,29 @@
                                 :style="{left: (originLines[idx].highlightRange[0] * 7) + 'px', 
                         width: (originLines[idx].highlightRange[1] * 7) + 'px'}">&nbsp;</div>
                         </div>
-
                     </div>
-                </div>
-
-            </div>
-            <div class="col-sm-6">
-                <div v-for="(ast, idx) in astInfo" class="line" @mouseenter="showAstRange(ast)">
-                    {{ Array(idx + 1).join('&nbsp;') + '->' + astToString(ast) }}
                 </div>
             </div>
         </div>
-        <div class="container-fluid">
+
+
+        <div class="container-fluid" v-if="mode == 'edit'">
             <div class="col-sm-12">
                 <div class="btn-group">
                     <div :class='["btn btn-default", currentBush == type && "active"]' v-for="(type, key) in SevenBHMapMaker"
                         @click="currentBush = type" v-if="typeof type== 'number'">{{key}}</div>
                 </div>
             </div>
-            <div class="col-sm-6">
-                <div class="row">
-                    <div class="cell-line" v-for="row in sevenBHContext.map">
-                        <div :class="['cell', getCellClass(cell)]" v-for="cell in row" @click="cell.type = currentBush">
-                            <div v-if="cell.type == SevenBHMapMaker.floor">
-                                <div v-for="item in cell.has">
-                                    <div :class="getCellClass(item)">{{getCellContent(item)}}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
             <div class="col-sm-6">
                 <pre v-html="mapInfo()"></pre>
             </div>
+            <div class="col-sm-6">
+                <div v-for="(ast, idx) in astInfo" class="line" @mouseenter="showAstRange(ast)">
+                    {{ Array(idx + 1).join('&nbsp;') + '->' + astToString(ast) }}
+                </div>
+            </div>
+
         </div>
     </div>
     <script src="https://cdn.bootcss.com/vue/2.5.16/vue.js"></script>

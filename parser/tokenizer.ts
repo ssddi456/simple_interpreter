@@ -27,15 +27,15 @@ export const unaryOperators: UnaryOperator[] = ['!', '-'];
 
 export type CaculateOperator = '+' | '-' | '*' | '/' | '&' | '|';
 export const caculateOperators: CaculateOperator[] = ['+', '-', '*', '/', '&', '|'];
-export type ConpareOperator = '!=' | '!==' | '==' | '<=' | '<' | '>' | '>=';
-export const conpareOperators: ConpareOperator[] = ['!=', '!==', '==', '<=', '<', '>', '>='];
+export type CompareOperator = '!=' | '!==' | '==' | '<=' | '<' | '>' | '>=';
+export const compareOperators: CompareOperator[] = ['!=', '!==', '==', '<=', '<', '>', '>='];
 export type LogicOperator = '||' | '&&' | 'and' | 'or';
 export const logicOperators: LogicOperator[] = ['||', '&&', 'and', 'or'];
 export type AssignmentOperator = '=';
 export const assignmentOperators: AssignmentOperator[] = ['='];
 
-export type BinaryOperator = CaculateOperator | ConpareOperator | LogicOperator | AssignmentOperator;
-export const binaryoperators: BinaryOperator[] = [...caculateOperators, ...conpareOperators, ...logicOperators, ...assignmentOperators];
+export type BinaryOperator = CaculateOperator | CompareOperator | LogicOperator | AssignmentOperator;
+export const binaryoperators: BinaryOperator[] = [...caculateOperators, ...compareOperators, ...logicOperators, ...assignmentOperators];
 
 export type TrinaryOperator = '?' | ':';
 export const trinaryOperators: TrinaryOperator[] = ['?', ':'];
