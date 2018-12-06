@@ -202,7 +202,7 @@ export function makeInterpreterContext(): InterpreterContext {
         memories: [],
         movedInStep: false,
         beforeStep() {
-            this.movedInStep = true;
+            this.movedInStep = false;
         },
         afterStep() {
             if (!this.movedInStep) {
@@ -210,6 +210,7 @@ export function makeInterpreterContext(): InterpreterContext {
             }
         },
         nextLine() {
+            this.movedInStep = true;
             this.currentToken = undefined;
             this.tokenIndex += 1;
         },
@@ -233,7 +234,7 @@ function isObjectType(ast: Ast) {
 
 function isTypeCheck(ast: AstBinary): boolean {
     const ops = ast.operator;
-    if ((ops === '==' || ops !== '!=')
+    if ((ops === '==' || ops === '!=')
         && (isObjectType(ast.left) || isObjectType(ast.right))
     ) {
         return true;
@@ -302,7 +303,29 @@ export function getBinaneryValue(ast: AstBinary, context: InterpreterContext, ma
         if (type === 'nothing') {
             return !obj || obj.type == SevenBHMapMaker.floor;
         }
-        return obj.type == SevenBHMapMaker[type];
+        switch (ops) {
+            case '==':
+                if (obj.type === SevenBHMapMaker[type]) {
+                    return true;
+                } else {
+                    if (obj.type === SevenBHMapMaker.floor) {
+                        return obj.has.some((x) => x.type === SevenBHMapMaker[type]);
+                    } else {
+                        return false;
+                    }
+                }
+            case '!=':
+                if (obj.type !== SevenBHMapMaker[type]) {
+                    if(obj.type === SevenBHMapMaker.floor) {
+                        return obj.has.every((x) => x.type !== SevenBHMapMaker[type]);
+                    } else {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+                return ;
+        }
     } else if (isValueCompare(ast)) {
         let obj: SevenBHBaseObject;
         if (ast.left.type == 'value') {
@@ -403,12 +426,12 @@ export function getDirectionValue(name: PosKeyword, mapContext: SevenBHContext) 
 }
 
 export function doIf(ast: AstIf, context: InterpreterContext, mapContext: SevenBHContext, jumpTable: JumpTable, ) {
-    if(getValue(ast.expression, context, mapContext, jumpTable)) {
+    if (getValue(ast.expression, context, mapContext, jumpTable)) {
         context.nextLine();
     } else {
         // 这里应该 goto else or endif
-        const ifInfo = jumpTable.ifPosMap.filter( x => x.if == ast)[0];
-        if(ifInfo.else) {
+        const ifInfo = jumpTable.ifPosMap.filter(x => x.if == ast)[0];
+        if (ifInfo.else) {
             context.goToLine(ifInfo.else);
         } else {
             context.goToLine(ifInfo.endif);

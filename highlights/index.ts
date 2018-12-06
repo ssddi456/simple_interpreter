@@ -47,6 +47,7 @@ drop
 if c != datacube:
     step s
     jump a
+endif
 pickup c
 step s
 drop
@@ -54,7 +55,7 @@ drop
 
 
 
-const content = contents[2];
+const content = contents[3];
 const originLines = makeLineInfo(content);
 console.log(originLines);
 const ctx = makeTokenizerContext(content);
@@ -72,7 +73,6 @@ new Vue({
         mapLineLength: originLines.reduce(function (max, line) {
             return Math.max(max, line.length);
         }, 0),
-        jumpTable: {},
     },
     methods: {
         showNodeInfo: function (node: Token) {
@@ -136,7 +136,7 @@ new Vue({
             'label' in linkInfo && this.showAstRange(linkInfo.label, true);
         },
         tick() {
-            interpreter(this.infos.ast, this.interpreterContext, this.sevenBHContext, this.jumpTable);
+            interpreter(this.infos.ast, this.interpreterContext, this.sevenBHContext, this.infos.jumpTable);
         },
     }
 });
