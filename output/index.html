@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.css">
+</head>
+
+<body>
+    <style>
+        .line {
+            font-family: monospace;
+            line-height: 2em;
+            margin-bottom: 10px;
+        }
+
+        .line:hover {
+            background-color: rgb(225, 243, 255);
+        }
+
+        .line-number {
+            display: inline-block;
+            width: 4em;
+            text-align: right;
+            border-right: 2px solid white;
+            margin-right: 2px;
+        }
+
+        .line-content {
+            display: inline-block;
+            position: relative;
+        }
+
+        .line-indicator {
+            display: inline-block;
+            width: 1em;
+        }
+
+        .line-indicator.active {
+            background-color: rgb(13, 81, 136);
+        }
+
+        .token {
+            position: absolute;
+            top: 0;
+            white-space: pre;
+            background-color: rgb(199, 198, 255);
+            outline: 1px solid white;
+        }
+
+        .token.error {
+            background-color: rgb(207, 79, 79);
+        }
+
+        .token:hover {
+            outline: 1px solid rgb(58, 59, 146);
+            z-index: 100;
+        }
+
+        .token:hover .token-info {
+            opacity: 1;
+            background-color: rgb(252, 249, 88);
+        }
+
+        .token .token-info {
+            z-index: 1;
+            position: absolute;
+            left: 0.5px;
+            top: -8px;
+            background-color: white;
+            opacity: .6;
+            font-size: 12px;
+            line-height: 1em;
+        }
+
+        .token.ast-range {
+            outline: 2px dashed rgba(4, 24, 61, 0.6);
+            background-color: transparent;
+            pointer-events: none;
+        }
+
+        .links {
+            margin-left: calc(5em + 12px);
+            position: relative;
+        }
+
+        .links .if-link {
+            position: absolute;
+            border-left: 4px solid rgba(105, 185, 231, 0.6);
+            border-top: 4px solid rgba(105, 185, 231, 0.6);
+        }
+
+        .links .link-color-1 {
+            border-color: rgba(255, 159, 128, 0.5);
+        }
+
+        .links .link-color-2 {
+            border-color: rgba(255, 128, 159, 0.5);
+        }
+
+        .links .link-color-3 {
+            border-color: rgba(208, 66, 255, 0.5);
+        }
+
+        .links .link-color-4 {
+            border-color: rgba(128, 255, 223, 0.5);
+        }
+
+        .links .link-color-5 {
+            border-color: rgba(128, 223, 255, 0.5);
+        }
+
+        .cell-line {
+            height: 40px;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            display: inline-block;
+            border-left: 1px solid rgb(102, 102, 102);
+            border-bottom: 1px solid rgb(102, 102, 102);
+            position: relative;
+        }
+
+        .cell.floor {
+            background-color: rgb(78, 78, 78);
+        }
+
+        .cell.hole {
+            background-color: rgb(15, 15, 15);
+        }
+
+        .cell.grinder {
+            background-color: rgb(194, 52, 9);
+        }
+
+        .cell.generator {
+            background-color: rgb(27, 255, 198);
+        }
+
+        .cell.wall {
+            background-color: rgb(39, 39, 39);
+        }
+
+        .cell .worker {
+            z-index: 2;
+            /* 37 * 57 */
+            width: 30px;
+            height: 57px;
+            margin-top: -20px;
+            margin-left: 5px;
+            background: url(./human.png) center no-repeat;
+            background-size: contain;
+            position: absolute;
+        }
+
+        .cell .worker-with-datacube {
+            z-index: 2;
+            /* 39 * 74 */
+            width: 35px;
+            height: 70px;
+            margin-top: -24px;
+            background-image: url(./human_with_datacube.png);
+            background-size: contain;
+            position: absolute;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .cell .datacube {
+            z-index: 3;
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            margin: 10px;
+            background-color: rgb(178, 212, 125);
+            border-bottom: 3px solid rgb(3, 10, 3);
+            box-shadow: 0 2px 0 2px rgba(18, 23, 26, 0.3);
+            text-align: center;
+            line-height: 22px;
+            font-weight: bolder;
+            font-size: 14px;
+        }
+        .controls {
+            margin-top:20px;
+        }
+    </style>
+
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">7bh demo</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li class="active"></li>
+                </ul>
+
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid" id="main">
+        <div class="nav"></div>
+        <div class="container-fluid">
+            <div class="col-sm-6">
+                <div class="row cell-map">
+                    <div class="cell-line" v-for="row in sevenBHContext.map">
+                        <div :class="['cell', getCellClass(cell)]" v-for="cell in row" @click="cell.type = currentBush">
+                            <div v-if="cell.type == SevenBHMapMaker.floor">
+                                <div v-for="item in cell.has">
+                                    <div :class="getCellClass(item)">{{getCellContent(item)}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="btn-toolbar controls">
+                        <div class="btn-group">
+                            <button class="btn btn-default" @click="toggleMode">mode:{{mode}}</button>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-default" @click="next">next</button>
+                            <button class="btn btn-default" @click="play">play</button>
+                            <button class="btn btn-default" @click="pause">pause</button>
+                            <button class="btn btn-default" @click="restart">restart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="links">
+                    <div v-for="ifInfo in infos.jumpTable.ifMap" @mouseenter="highlights(ifInfo)">
+                        <div v-if="ifInfo.else">
+                            <div class="if-link" :style="{
+                                    left: (ifInfo.if.start.row * 7) + 'px', 
+                                    top: ((ifInfo.if.start.line + 1) * 38 - 5) + 'px',
+                                    height: ((ifInfo.else.start.line - ifInfo.if.start.line - 1) * 38) + 'px'
+                                }"></div>
+                            <div class="if-link" :style="{
+                                    left: (ifInfo.else.start.row * 7) + 'px', 
+                                    top: ((ifInfo.else.start.line + 1) * 38 - 5) + 'px',
+                                    height:((ifInfo.endif.start.line - ifInfo.else.start.line - 1) * 38) + 'px'
+                                }"></div>
+                        </div>
+                        <div v-if="!ifInfo.else">
+                            <div class="if-link" :style="{
+                                    left: (ifInfo.if.start.row * 7) + 'px', 
+                                    top: ((ifInfo.if.start.line + 1) * 38 - 5) + 'px',
+                                    height: ((ifInfo.endif.start.line - ifInfo.if.start.line - 1) * 38) + 'px'
+                                }"></div>
+                        </div>
+                    </div>
+                    <div v-for="(jumpInfo, i) in infos.jumpTable.jumpMap" @mouseenter="highlights(jumpInfo)">
+                        <div :class="['if-link', 'link-color-' + (i+1)]" :style="{
+                                left: ((mapLineLength + 4 * (i + 1) ) * 7) + 'px', 
+                                top: ((Math.min(jumpInfo.jump.start.line, jumpInfo.label.start.line)) * 38 + 14) + 'px',
+                                height: ((Math.abs(jumpInfo.jump.start.line - jumpInfo.label.start.line)) * 38 + 4)  + 'px'
+                            }"></div>
+                        <div :class="['if-link', 'link-color-' + (i+1)]" :style="{
+                                left: ((jumpInfo.jump.end.row + 2)* 7) + 'px', 
+                                top: (jumpInfo.jump.end.line * 38 + 14) + 'px',
+                                width: ((Math.abs(jumpInfo.jump.end.row - mapLineLength) + 4 * (i + 1) - 2) * 7) + 'px'
+                            }"></div>
+                        <div :class="['if-link', 'link-color-' + (i+1)]" :style="{
+                                left: ((jumpInfo.label.end.row + 2)* 7) + 'px', 
+                                top: (jumpInfo.label.end.line * 38 + 14) + 'px',
+                                width: ((Math.abs(jumpInfo.label.end.row - mapLineLength) + 4 * (i + 1) - 2) * 7) + 'px'
+                            }"></div>
+                    </div>
+
+                </div>
+
+                <div class="lines">
+                    <div v-for="(line, idx) in lines" class="line">
+                        <div class="line-indicator" :class='[idx == interpreterContext.line && "active"]'>&nbsp;</div>
+                        <div class="line-number">{{ idx }}</div>
+                        <div class="line-content">
+                            &nbsp;
+                            <div v-for="token in line" :class='["token", token.error && "error"]' :style="{left: (token.pos.row * 7) + 'px'}"
+                                @click="showNodeInfo(token)" v-html='"<div class=\"token-info\">"+token.index+"</div>"+token.content'>
+                            </div>
+                            <div v-if="originLines[idx].highlightRange !== undefined" :class='["token", "ast-range"]'
+                                :style="{left: (originLines[idx].highlightRange[0] * 7) + 'px', 
+                        width: (originLines[idx].highlightRange[1] * 7) + 'px'}">&nbsp;</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container-fluid" v-if="mode == 'edit'">
+            <div class="col-sm-12">
+                <div class="btn-group">
+                    <div :class='["btn btn-default", currentBush == type && "active"]' v-for="(type, key) in SevenBHMapMaker"
+                        @click="currentBush = type" v-if="typeof type== 'number'">{{key}}</div>
+                </div>
+            </div>
+
+            <div class="col-sm-6">
+                <pre v-html="mapInfo()"></pre>
+            </div>
+            <div class="col-sm-6">
+                <div v-for="(ast, idx) in astInfo" class="line" @mouseenter="showAstRange(ast)">
+                    {{ Array(idx + 1).join('&nbsp;') + '->' + astToString(ast) }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script src="https://cdn.bootcss.com/vue/2.5.16/vue.js"></script>
+    <script src="https://cdn.bootcss.com/require.js/2.3.4/require.min.js"></script>
+    <script>
+        // require.config({
+        //     baseUrl: "https://cdn.jsdelivr.net/gh/ssddi456/simple_interpreter@master/highlights"
+        // });
+
+        require([
+            '../output/highlights/index.js',
+        ], function (highlights) {
+
+        })
+    </script>
+</body>
+
+</html>
