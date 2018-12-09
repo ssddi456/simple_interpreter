@@ -8,7 +8,7 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
 };
 define(["require", "exports", "../parser/tokenizer"], function (require, exports, tokenizer_1) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     function makeInterpreterContext(symbolMap) {
         return {
             currentToken: undefined,
@@ -96,20 +96,20 @@ define(["require", "exports", "../parser/tokenizer"], function (require, exports
     function getIfValue(ast, ctx) {
         var checkValue = getBoolean(ast.expression, ctx);
         if (checkValue) {
-            return getValue(ast["do"], ctx);
+            return getValue(ast.do, ctx);
         }
-        else if (ast["else"]) {
-            return getValue(ast["else"], ctx);
+        else if (ast.else) {
+            return getValue(ast.else, ctx);
         }
     }
     exports.getIfValue = getIfValue;
     function getTrinaryValue(ast, ctx) {
         var checkValue = getBoolean(ast.expression, ctx);
         if (checkValue) {
-            return getValue(ast["do"], ctx);
+            return getValue(ast.do, ctx);
         }
         else {
-            return getValue(ast["else"], ctx);
+            return getValue(ast.else, ctx);
         }
     }
     exports.getTrinaryValue = getTrinaryValue;

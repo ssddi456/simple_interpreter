@@ -8,13 +8,13 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
 };
 define(["require", "exports", "./tokenizer"], function (require, exports, tokenizer_1) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     function makeAstBlock(start, end, children) {
         return {
             type: 'block',
             children: children,
             start: start,
-            end: end
+            end: end,
         };
     }
     exports.makeAstBlock = makeAstBlock;
@@ -24,10 +24,10 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             end: end,
             type: 'if',
             expression: expression,
-            "do": _do
+            do: _do
         };
         if (_else) {
-            ret["else"] = _else;
+            ret.else = _else;
         }
         return ret;
     }
@@ -59,8 +59,8 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             end: end,
             type: 'trinary',
             expression: expression,
-            "do": _do,
-            "else": _else
+            do: _do,
+            else: _else
         };
     }
     exports.makeAstTrinary = makeAstTrinary;
@@ -78,7 +78,7 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             start: start,
             end: end,
             type: 'identifier',
-            name: name
+            name: name,
         };
     }
     exports.makeAstIdentifier = makeAstIdentifier;
@@ -97,7 +97,7 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             start: start,
             end: end,
             type: 'label',
-            name: name
+            name: name,
         };
     }
     exports.makeAstLabel = makeAstLabel;
@@ -150,7 +150,7 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             return {
                 tokenIndex: -1,
                 tokens: undefined,
-                stopAt: undefined
+                stopAt: undefined,
             };
         }
         else {

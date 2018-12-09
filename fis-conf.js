@@ -1,4 +1,4 @@
-fis.set('project.ignore', fis.get('project.ignore').concat(['test/**', '*.d.ts', '*.json', 'LICENSE']));
+fis.set('project.ignore', fis.get('project.ignore').concat(['test/**', '*.d.ts', '*.json', '*.md', 'LICENSE']));
 
 fis.match('*.ts', {
     rExt: '.js',

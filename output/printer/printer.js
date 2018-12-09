@@ -1,6 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     function tokensToLines(tokens) {
         var lines = [];
         var line = [];
@@ -41,7 +41,7 @@ define(["require", "exports"], function (require, exports) {
                     length: nextLineEnd - index,
                     startOffset: index,
                     endOffset: nextLineEnd,
-                    highlightRange: undefined
+                    highlightRange: undefined,
                 });
             }
             else {
@@ -49,7 +49,7 @@ define(["require", "exports"], function (require, exports) {
                     length: content.length - index,
                     startOffset: index,
                     endOffset: content.length,
-                    highlightRange: undefined
+                    highlightRange: undefined,
                 });
                 return ret;
             }

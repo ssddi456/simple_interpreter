@@ -1,12 +1,12 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     exports.player_mixin = {
         data: function () {
             return {
                 timer: undefined,
                 speed: 1000,
-                playing: false
+                playing: false,
             };
         },
         methods: {

@@ -1,6 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     function walk(ast, handler) {
         for (var i = 0; i < ast.length; i++) {
             var element = ast[i];

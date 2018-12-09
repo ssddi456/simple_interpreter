@@ -1,6 +1,6 @@
-define(["require", "exports", "../parser/tokenizer", "../printer/printer", "../walker/walker_with_jump", "../interpreter/interpreter_with_jump", "./player_mixin", "./context_mgr_mixin", "./edit_mixin"], function (require, exports, tokenizer_1, printer_1, walker_with_jump_1, interpreter_with_jump_1, player_mixin_1, context_mgr_mixin_1, edit_mixin_1) {
+define(["require", "exports", "vue/types", "../parser/tokenizer", "../printer/printer", "../walker/walker_with_jump", "./player_mixin", "./context_mgr_mixin", "./edit_mixin"], function (require, exports, types_1, tokenizer_1, printer_1, walker_with_jump_1, player_mixin_1, context_mgr_mixin_1, edit_mixin_1) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     var contents = ["a:\nb:\nmem1 = nearest datacube\nstep mem1\nif c == datacube and\n  nw != datacube and\n  w != datacube:\n    step nw,w,sw,n,s,ne,e,se\n    jump b\nendif\npickup mem1\nc:\nif w != datacube and\n  e != datacube and\n  c != datacube and\n  nw != datacube and\n  myitem == datacube:\n    drop\n    jump a\nendif\nstep nw,w,sw,n,s,ne,e,se\njump c\n",
         "if c == datacube and\n  nw != datacube:\n    step nw,w,sw,n,s,ne,e,se\n    jump b\nendif\n", "step s\nstep s\nstep s\nstep s\npickup c\nstep s\ndrop\n",
         "a:\nif c != datacube:\n    step s\n    jump a\nendif\npickup c\nstep s\ndrop\n"];
@@ -10,7 +10,8 @@ define(["require", "exports", "../parser/tokenizer", "../printer/printer", "../w
     var ctx = tokenizer_1.makeTokenizerContext(content);
     var tokens = tokenizer_1.tokenize(ctx);
     var lines = printer_1.tokensToLines(tokens);
-    new Vue({
+    ;
+    var config = {
         el: '#main',
         mixins: [context_mgr_mixin_1.makeContextMgr(ctx, tokens), player_mixin_1.player_mixin, edit_mixin_1.edit_mixin],
         data: {
@@ -19,7 +20,7 @@ define(["require", "exports", "../parser/tokenizer", "../printer/printer", "../w
             originLines: originLines,
             mapLineLength: originLines.reduce(function (max, line) {
                 return Math.max(max, line.length);
-            }, 0)
+            }, 0),
         },
         methods: {
             showNodeInfo: function (node) {
@@ -81,17 +82,15 @@ define(["require", "exports", "../parser/tokenizer", "../printer/printer", "../w
             },
             highlights: function (linkInfo) {
                 this.removeAllHighlightLine();
-                'if' in linkInfo && this.showAstRange(linkInfo["if"], true);
-                'else' in linkInfo && this.showAstRange(linkInfo["else"], true);
+                'if' in linkInfo && this.showAstRange(linkInfo.if, true);
+                'else' in linkInfo && this.showAstRange(linkInfo.else, true);
                 'endif' in linkInfo && this.showAstRange(linkInfo.endif, true);
                 'jump' in linkInfo && this.showAstRange(linkInfo.jump, true);
                 'label' in linkInfo && this.showAstRange(linkInfo.label, true);
             },
-            tick: function () {
-                interpreter_with_jump_1.interpreter(this.infos.ast, this.interpreterContext, this.sevenBHContext, this.infos.jumpTable);
-            }
         }
-    });
+    };
+    new types_1.default(config);
     function findNodeByPos(ast, offset) {
         var target = [];
         walker_with_jump_1.walk(ast, function (element) {

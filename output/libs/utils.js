@@ -1,6 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     function forEachChild(ast, visitor) {
         switch (ast.type) {
             case 'block':
@@ -15,15 +15,15 @@ define(["require", "exports"], function (require, exports) {
                 break;
             case 'if':
                 visitor(ast.expression, ast);
-                visitor(ast["do"], ast);
-                if (ast["else"]) {
-                    visitor(ast["else"], ast);
+                visitor(ast.do, ast);
+                if (ast.else) {
+                    visitor(ast.else, ast);
                 }
                 break;
             case 'trinary':
                 visitor(ast.expression, ast);
-                visitor(ast["do"], ast);
-                visitor(ast["else"], ast);
+                visitor(ast.do, ast);
+                visitor(ast.else, ast);
                 break;
         }
     }

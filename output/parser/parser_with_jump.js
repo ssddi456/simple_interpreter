@@ -18,13 +18,13 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
 };
 define(["require", "exports", "./tokenizer"], function (require, exports, tokenizer_1) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     function makeAstIf(start, end, expression) {
         var ret = {
             start: start,
             end: end,
             type: 'if',
-            expression: expression
+            expression: expression,
         };
         return ret;
     }
@@ -89,8 +89,8 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             end: end,
             type: 'trinary',
             expression: expression,
-            "do": _do,
-            "else": _else
+            do: _do,
+            else: _else
         };
     }
     exports.makeAstTrinary = makeAstTrinary;
@@ -108,7 +108,7 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             start: start,
             end: end,
             type: 'identifier',
-            name: name
+            name: name,
         };
     }
     exports.makeAstIdentifier = makeAstIdentifier;
@@ -131,7 +131,7 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             start: start,
             end: end,
             type: 'label',
-            name: name
+            name: name,
         };
     }
     exports.makeAstLabel = makeAstLabel;
@@ -140,7 +140,7 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             start: start,
             end: end,
             type: 'jump',
-            labelName: labelName
+            labelName: labelName,
         };
     }
     exports.makeAstJump = makeAstJump;
@@ -190,7 +190,7 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             return {
                 tokenIndex: -1,
                 tokens: tokens.slice(start, end),
-                stopAt: undefined
+                stopAt: undefined,
             };
         }
         else {
@@ -433,13 +433,13 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             labelPosMap: {},
             ifMap: [],
             ifPosMap: [],
-            jumpMap: []
+            jumpMap: [],
         };
         var ifStack = [];
         var currentIf = undefined;
         function startIfStack(ast) {
             var ret = {
-                "if": ast
+                if: ast,
             };
             ifStack.push(ret);
             currentIf = ret;
@@ -452,8 +452,8 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
             ifStack.pop();
             ret.ifMap.push(currentIf);
             ret.ifPosMap.push({
-                "if": currentIf["if"],
-                "else": currentIf["else"] && asts.indexOf(currentIf["else"]),
+                if: currentIf.if,
+                else: currentIf.else && asts.indexOf(currentIf.else),
                 endif: asts.indexOf(currentIf.endif)
             });
             currentIf = ifStack[ifStack.length - 1];
@@ -473,7 +473,7 @@ define(["require", "exports", "./tokenizer"], function (require, exports, tokeni
                     throw new ParseError('illegal else element', element);
                 }
                 else {
-                    currentIf["else"] = element;
+                    currentIf.else = element;
                 }
             }
             else if (element.type == 'endif') {

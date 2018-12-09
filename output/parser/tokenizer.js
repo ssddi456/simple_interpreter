@@ -8,7 +8,7 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
 };
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     exports.unaryOperators = ['!', '-'];
     exports.caculateOperators = ['+', '-', '*', '/', '&', '|'];
     exports.compareOperators = ['!=', '!==', '==', '<=', '<', '>', '>='];
@@ -30,7 +30,7 @@ define(["require", "exports"], function (require, exports) {
             pos: {
                 line: 0,
                 row: 0,
-                offset: 0
+                offset: 0,
             }
         };
     }
@@ -41,7 +41,7 @@ define(["require", "exports"], function (require, exports) {
             pos: {
                 line: ctx.pos.line,
                 row: ctx.pos.row,
-                offset: ctx.pos.offset
+                offset: ctx.pos.offset,
             }
         };
     }

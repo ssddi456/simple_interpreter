@@ -8,12 +8,12 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
 };
 define(["require", "exports", "../parser/parser_with_jump", "../parser/tokenizer"], function (require, exports, parser_with_jump_1, tokenizer_1) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     function makeSevenBHFloor(row, line) {
         return {
             pos: {
                 row: row,
-                line: line
+                line: line,
             },
             type: SevenBHMapMaker.floor,
             has: []
@@ -24,9 +24,9 @@ define(["require", "exports", "../parser/parser_with_jump", "../parser/tokenizer
             value: 0,
             pos: {
                 line: 0,
-                row: 0
+                row: 0,
             },
-            type: SevenBHMapMaker.datacube
+            type: SevenBHMapMaker.datacube,
         };
     }
     exports.makeSevenBHDataCube = makeSevenBHDataCube;
@@ -34,10 +34,10 @@ define(["require", "exports", "../parser/parser_with_jump", "../parser/tokenizer
         return {
             pos: {
                 line: 0,
-                row: 0
+                row: 0,
             },
             holds: undefined,
-            type: SevenBHMapMaker.worker
+            type: SevenBHMapMaker.worker,
         };
     }
     exports.makeSevenBHWorker = makeSevenBHWorker;
@@ -65,7 +65,7 @@ define(["require", "exports", "../parser/parser_with_jump", "../parser/tokenizer
             datacubes: [],
             map: map,
             width: width,
-            height: height
+            height: height,
         };
     }
     exports.makeSevenBHContext = makeSevenBHContext;
@@ -279,42 +279,42 @@ define(["require", "exports", "../parser/parser_with_jump", "../parser/tokenizer
             case 'nw':
                 return {
                     row: pos.row - 1,
-                    line: pos.line - 1
+                    line: pos.line - 1,
                 };
             case 'w':
                 return {
                     row: pos.row - 1,
-                    line: pos.line
+                    line: pos.line,
                 };
             case 'sw':
                 return {
                     row: pos.row - 1,
-                    line: pos.line + 1
+                    line: pos.line + 1,
                 };
             case 'n':
                 return {
                     row: pos.row,
-                    line: pos.line - 1
+                    line: pos.line - 1,
                 };
             case 'ne':
                 return {
                     row: pos.row + 1,
-                    line: pos.line - 1
+                    line: pos.line - 1,
                 };
             case 'e':
                 return {
                     row: pos.row + 1,
-                    line: pos.line
+                    line: pos.line,
                 };
             case 'se':
                 return {
                     row: pos.row + 1,
-                    line: pos.line + 1
+                    line: pos.line + 1,
                 };
             case 's':
                 return {
                     row: pos.row,
-                    line: pos.line + 1
+                    line: pos.line + 1,
                 };
         }
     }
@@ -332,9 +332,9 @@ define(["require", "exports", "../parser/parser_with_jump", "../parser/tokenizer
         }
         else {
             // 这里应该 goto else or endif
-            var ifInfo = jumpTable.ifPosMap.filter(function (x) { return x["if"] == ast; })[0];
-            if (ifInfo["else"]) {
-                context.goToLine(ifInfo["else"]);
+            var ifInfo = jumpTable.ifPosMap.filter(function (x) { return x.if == ast; })[0];
+            if (ifInfo.else) {
+                context.goToLine(ifInfo.else);
             }
             else {
                 context.goToLine(ifInfo.endif);

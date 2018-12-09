@@ -1,10 +1,11 @@
+import { default as Vue, ComponentOptions, } from 'vue/types';
 import { tokenize, makeTokenizerContext, Token } from "../parser/tokenizer";
 import { tokensToLines, makeLineInfo, LineInfo } from "../printer/printer";
 import { Ast, JumpInfo, IfInfo } from "../parser/parser_with_jump";
 import { walk } from "../walker/walker_with_jump";
-import { interpreter } from "../interpreter/interpreter_with_jump";
+
 import { player_mixin } from "./player_mixin";
-import { makeContextMgr } from "./context_mgr_mixin";
+import { makeContextMgr, ContextMgrMixin } from "./context_mgr_mixin";
 import { edit_mixin } from "./edit_mixin";
 
 const contents = [`a:
@@ -43,7 +44,7 @@ pickup c
 step s
 drop
 `,
-`a:
+    `a:
 if c != datacube:
     step s
     jump a
@@ -62,8 +63,22 @@ const ctx = makeTokenizerContext(content);
 const tokens = tokenize(ctx);
 const lines = tokensToLines(tokens);
 
+interface MainVmData {
+    lines: typeof lines;
+    astInfo: ReturnType<typeof findNodeByPos>;
+    originLines: typeof originLines;
+    mapLineLength: number;
+};
+interface MainVmMethods {
+    showNodeInfo(this: MainVm, node: Token): void;
+    removeAllHighlightLine(this: MainVm): void;
+    showAstRange(this: MainVm, ast: Ast, dontRemove: boolean): void;
+    astToString(this: MainVm, ast: Ast): string;
+    highlights(this: MainVm, linkInfo: JumpInfo | IfInfo): void;
+}
 
-new Vue({
+type MainVm = MainVmData & MainVmMethods & ContextMgrMixin& Vue;
+const config: ComponentOptions<MainVm> = {
     el: '#main',
     mixins: [makeContextMgr(ctx, tokens), player_mixin, edit_mixin],
     data: {
@@ -75,7 +90,7 @@ new Vue({
         }, 0),
     },
     methods: {
-        showNodeInfo: function (node: Token) {
+        showNodeInfo(node: Token) {
             const ast = findNodeByPos(this.infos.ast, node.pos.offset);
             this.astInfo = ast;
         },
@@ -85,7 +100,7 @@ new Vue({
                 removeHighlightLine(element);
             }
         },
-        showAstRange: function (ast: Ast, dontRemove = false) {
+        showAstRange(ast: Ast, dontRemove = false) {
             for (let i = 0; i < originLines.length; i++) {
                 const element = originLines[i];
                 if (i > ast.start.line && i < ast.end.line) {
@@ -107,7 +122,7 @@ new Vue({
                 }
             }
         },
-        astToString: function (ast: Ast) {
+        astToString(ast: Ast) {
             let ret = ast.type;
             switch (ast.type) {
                 case 'value':
@@ -130,16 +145,16 @@ new Vue({
         highlights(linkInfo: JumpInfo | IfInfo) {
             this.removeAllHighlightLine();
             'if' in linkInfo && this.showAstRange(linkInfo.if, true);
-            'else' in linkInfo && this.showAstRange(linkInfo.else, true);
+            'else' in linkInfo && this.showAstRange(linkInfo.else!, true);
             'endif' in linkInfo && this.showAstRange(linkInfo.endif, true);
             'jump' in linkInfo && this.showAstRange(linkInfo.jump, true);
             'label' in linkInfo && this.showAstRange(linkInfo.label, true);
         },
-        tick() {
-            interpreter(this.infos.ast, this.interpreterContext, this.sevenBHContext, this.infos.jumpTable);
-        },
+
     }
-});
+};
+
+new Vue(config);
 
 function findNodeByPos(ast: Ast[], offset: number): Ast[] {
     let target: Ast[] = [];

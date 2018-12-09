@@ -2,7 +2,7 @@
     "compilerOptions": {
         "allowJs": true,
         "strictNullChecks": true,
-        "module": "amd",
+        "module": "commonjs",
         "outDir": "./output"
     },
     "exclude": [

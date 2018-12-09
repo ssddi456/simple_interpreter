@@ -1,6 +1,21 @@
+import { default as Vue, ComponentOptions, } from 'vue/types';
+import { ContextMgrMixin } from './context_mgr_mixin';
 
+interface PlayerMixinData {
+    timer: number | undefined;
+    speed: number;
+    playing: boolean;
+}
+interface PlayerMixinMethods {
+    play(this: PlayerMixin): void;
+    next(this: PlayerMixin): void;
+    pause(this: PlayerMixin): void;
+    restart(this: PlayerMixin): void;
+}
 
-export const player_mixin = {
+export type PlayerMixin = PlayerMixinData & PlayerMixinMethods & ContextMgrMixin & Vue;
+
+export const player_mixin: ComponentOptions<PlayerMixin> = {
     data() {
         return {
             timer: undefined,

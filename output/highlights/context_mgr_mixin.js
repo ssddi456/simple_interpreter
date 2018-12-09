@@ -1,11 +1,11 @@
-define(["require", "exports", "../interpreter/interpreter_with_jump", "../data/levels", "../parser/parser_with_jump"], function (require, exports, interpreter_with_jump_1, levels_1, parser_with_jump_1) {
+define(["require", "exports", "../interpreter/interpreter_with_jump", "../data/levels", "../parser/parser_with_jump", "../interpreter/interpreter_with_jump"], function (require, exports, interpreter_with_jump_1, levels_1, parser_with_jump_1, interpreter_with_jump_2) {
     "use strict";
-    exports.__esModule = true;
+    Object.defineProperty(exports, "__esModule", { value: true });
     function makeContextMgr(ctx, tokens) {
         var parserContext = parser_with_jump_1.makeParserContext(ctx, tokens);
         var infos = {
             ast: [],
-            jumpTable: {}
+            jumpTable: {},
         };
         try {
             var ast = parser_with_jump_1.makeAst(parserContext);
@@ -19,10 +19,8 @@ define(["require", "exports", "../interpreter/interpreter_with_jump", "../data/l
         function makeData() {
             return {
                 infos: infos,
-                currentBush: interpreter_with_jump_1.SevenBHMapMaker.floor,
-                SevenBHMapMaker: interpreter_with_jump_1.SevenBHMapMaker,
                 sevenBHContext: interpreter_with_jump_1.loadSevenBHContext(levels_1.level1),
-                interpreterContext: interpreter_with_jump_1.makeInterpreterContext()
+                interpreterContext: interpreter_with_jump_1.makeInterpreterContext(),
             };
         }
         var context_mgr_mixin = {
@@ -59,7 +57,10 @@ define(["require", "exports", "../interpreter/interpreter_with_jump", "../data/l
                             return cell.holds.value;
                         }
                     }
-                }
+                },
+                tick: function () {
+                    interpreter_with_jump_2.interpreter(this.infos.ast, this.interpreterContext, this.sevenBHContext, this.infos.jumpTable);
+                },
             }
         };
         return context_mgr_mixin;
