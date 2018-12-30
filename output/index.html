@@ -217,6 +217,8 @@
     </nav>
 
     <div class="container-fluid" id="main">
+        <level_selector></level_selector>
+        <test_components />
         <div class="nav"></div>
         <div class="container-fluid">
             <div class="col-sm-6">
@@ -360,6 +362,10 @@
     <script src="https://cdn.bootcss.com/vue/2.5.16/vue.js"></script>
     <script src="https://cdn.bootcss.com/require.js/2.3.4/require.min.js"></script>
     <script>
+        define('vue', [], function () {
+            'use strict';
+            return Vue;
+        });
         define('vue/types', [], function () {
             'use strict';
             return {
@@ -367,8 +373,16 @@
             };
         });
 
+        require.config({
+            baseUrl: '..',
+            paths: {
+                'vue-class-component': 'output/node_modules/vue-class-component/dist/vue-class-component.common',
+                'vue-property-decorator': 'output/node_modules/vue-property-decorator/lib/vue-property-decorator.umd'
+            }
+        });
+
         require([
-            '../output/highlights/index.js',
+            'output/highlights/index',
         ], function (highlights) {
 
         })

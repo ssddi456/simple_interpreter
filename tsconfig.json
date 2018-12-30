@@ -2,6 +2,10 @@
     "compilerOptions": {
         "allowJs": true,
         "strictNullChecks": true,
+        "experimentalDecorators": true,
+        "jsx": "preserve",
+        "jsxFactory": "h",
+        "allowSyntheticDefaultImports": true,
         "module": "commonjs",
         "outDir": "./output"
     },

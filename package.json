@@ -22,9 +22,14 @@
         "@types/mocha": "^5.2.5",
         "chai": "^4.1.2",
         "mocha": "^5.2.0",
-        "ts-node": "^7.0.1"
+        "ts-node": "^7.0.1",
+        "vue-property-decorator": "^7.2.0"
     },
     "dependencies": {
+        "fis3": "^3.4.41",
+        "fis3-hook-amd": "^0.2.2",
+        "fis3-hook-commonjs": "^0.1.31",
+        "fis3-hook-node_modules": "^2.3.1",
         "vue": "^2.5.18"
     }
 }

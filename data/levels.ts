@@ -1,6 +1,6 @@
 import { SevenBHLevel } from "../interpreter/interpreter_with_jump";
 
-export const level1: SevenBHLevel = {
+const level1: SevenBHLevel = {
     "map": [
         [
             {
@@ -727,3 +727,5 @@ export const level1: SevenBHLevel = {
     "width": 10,
     "height": 10
 };
+
+export default [level1];
