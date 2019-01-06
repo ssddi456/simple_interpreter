@@ -12,12 +12,10 @@ enum DisplayMode {
     playing = 'playing',
 }
 export interface EditMixinData {
-    mode: DisplayMode;
     pointerMode: PointerMode;
     PointerMode: typeof PointerMode;
     brush: SevenBHMapMaker;
     brushTypes: typeof SevenBHMapMaker;
-    modes: DisplayMode[];
     width: number;
     height: number;
     editSevenBHContext: SevenBHContext | undefined;
@@ -112,12 +110,10 @@ const edit_mixin_methods: EditMixinMethods = {
 export const edit_mixin: ComponentOptions<EditMixin> = {
     data(): EditMixinData {
         return {
-            mode: DisplayMode.playing,
             pointerMode: PointerMode.pointer,
             PointerMode: PointerMode,
             brush: SevenBHMapMaker.floor,
             brushTypes: SevenBHMapMaker,
-            modes: [DisplayMode.edit, DisplayMode.playing],
             width: 10,
             height: 10,
             editSevenBHContext: undefined,

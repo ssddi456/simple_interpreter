@@ -1,26 +1,56 @@
-define('output/highlights/index', ['require', 'exports', 'module', "vue", "output/highlights/player_mixin", "output/highlights/context_mgr_mixin", "output/highlights/edit_mixin", "output/highlights/code_view_mixin", "output/highlights/level_selector", "output/highlights/test_components"], function(require, exports, module) {
+define('output/highlights/index', ['require', 'exports', 'module', "vue", "output/highlights/level_selector", "output/highlights/editor", "output/highlights/player"], function(require, exports, module) {
 
   "use strict";
   Object.defineProperty(exports, "__esModule", { value: true });
   var Vue = require("vue");
-  var player_mixin_1 = require("output/highlights/player_mixin");
-  var context_mgr_mixin_1 = require("output/highlights/context_mgr_mixin");
-  var edit_mixin_1 = require("output/highlights/edit_mixin");
-  var code_view_mixin_1 = require("output/highlights/code_view_mixin");
   var level_selector_1 = require("output/highlights/level_selector");
-  var test_components_1 = require("output/highlights/test_components");
-  ;
+  var editor_1 = require("output/highlights/editor");
+  var player_1 = require("output/highlights/player");
+  Vue.use({
+      install: function (vue) {
+          vue.mixin(vue.extend({
+              beforeCreate: function () {
+                  var originalCreateElement = this.$createElement;
+                  this.$createElement = function (tag, data) {
+                      var children = [];
+                      for (var _i = 2; _i < arguments.length; _i++) {
+                          children[_i - 2] = arguments[_i];
+                      }
+                      return originalCreateElement(tag, data, children);
+                  };
+              },
+          }));
+      },
+  });
+  var mainVmModes;
+  (function (mainVmModes) {
+      mainVmModes[mainVmModes["level_selector"] = 0] = "level_selector";
+      mainVmModes[mainVmModes["player"] = 1] = "player";
+      mainVmModes[mainVmModes["editor"] = 2] = "editor";
+  })(mainVmModes || (mainVmModes = {}));
   var config = {
       el: '#main',
-      mixins: [context_mgr_mixin_1.context_mgr_mixin, player_mixin_1.player_mixin, edit_mixin_1.edit_mixin, code_view_mixin_1.code_view_mixin],
+      template: /** template */ "\n        <level_selector v-if=\"currentMode == mainVmModes.level_selector\" @change=\"changeHandler\"></level_selector>\n        <player v-else-if=\"currentMode == mainVmModes.player\" ref=\"player\" />\n        <editor v-else-if=\"currentMode == mainVmModes.editor\" />\n    ",
       components: {
           level_selector: level_selector_1.default,
-          test_components: test_components_1.default
+          player: player_1.default,
+          editor: editor_1.default
       },
-      data: {},
-      created: function () {
+      data: function () {
+          return {
+              mainVmModes: mainVmModes,
+              currentMode: mainVmModes.level_selector
+          };
       },
-      methods: {}
+      methods: {
+          changeHandler: function (index) {
+              console.log('changed', index);
+              this.currentMode = mainVmModes.player;
+              this.$nextTick(function () {
+                  this.$refs.player.loadLevel(index);
+              });
+          }
+      }
   };
   new Vue(config);
   

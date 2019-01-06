@@ -42,30 +42,6 @@ define('output/highlights/context_mgr_mixin', ['require', 'exports', 'module', "
               this.sevenBHContext = interpreter_with_jump_1.loadSevenBHContext(this.currentLevel);
               this.interpreterContext = interpreter_with_jump_1.makeInterpreterContext();
           },
-          getCellClass: function (cell) {
-              if (cell.type == interpreter_with_jump_1.SevenBHMapMaker.datacube) {
-                  return interpreter_with_jump_1.SevenBHMapMaker[interpreter_with_jump_1.SevenBHMapMaker.datacube];
-              }
-              else if (cell.type == interpreter_with_jump_1.SevenBHMapMaker.worker) {
-                  if (!cell.holds) {
-                      return interpreter_with_jump_1.SevenBHMapMaker[interpreter_with_jump_1.SevenBHMapMaker.worker];
-                  }
-                  else {
-                      return 'worker-with-datacube';
-                  }
-              }
-              return interpreter_with_jump_1.SevenBHMapMaker[cell.type];
-          },
-          getCellContent: function (cell) {
-              if (cell.type == interpreter_with_jump_1.SevenBHMapMaker.datacube) {
-                  return cell.value;
-              }
-              else if (cell.type == interpreter_with_jump_1.SevenBHMapMaker.worker) {
-                  if (cell.holds) {
-                      return cell.holds.value;
-                  }
-              }
-          },
           tick: function () {
               interpreter_with_jump_2.interpreter(this.infos.ast, this.interpreterContext, this.sevenBHContext, this.infos.jumpTable);
           },

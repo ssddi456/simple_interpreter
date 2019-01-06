@@ -68,6 +68,12 @@ export interface LevelMgrMethods {
     loadLevel(n: number): void;
 }
 
+function makePlayStatus(): PlayStatus{
+    return {
+        code: ''
+    };
+}
+
 export type LevelMgrMixin = LevelMgrData & LevelMgrMethods & ContextMgrMixinData & ContextMgrMixinMethods & CodeViewMixinData & CodeViewMixinMethods & Vue;
 
 export const level_mgr_mixin: ComponentOptions<LevelMgrMixin> = {
@@ -83,7 +89,11 @@ export const level_mgr_mixin: ComponentOptions<LevelMgrMixin> = {
         loadLevel(n: number) {
             this.currentLevelIndex = n;
             this.currentLevel = this.levels[this.currentLevelIndex];
-            const { ctx, tokens } = this.loadCode(this.playStatuses[this.currentLevelIndex].code);
+
+            this.playStatuses[this.currentLevelIndex] = this.playStatuses[this.currentLevelIndex] || makePlayStatus();
+            const playStatus = this.playStatuses[this.currentLevelIndex];
+            const { ctx, tokens } = this.loadCode(playStatus.code);
+
             this.makeContextInfo(ctx, tokens);
             this.reload();
         }

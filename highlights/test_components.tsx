@@ -1,13 +1,23 @@
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { Vue, Component, Prop, Emit } from 'vue-property-decorator';
 import { CreateElement } from 'vue/types';
 
 @Component
 export default class extends Vue {
-    @Prop({ default: 'some sort of data'})
+    @Prop({ default: 'some sort of data' })
     data: string;
+
+    someClicHandler() {
+        console.log('yeah');
+        this.$emit('test');
+    }
+
     render(h: CreateElement) {
         return (
-            <div>{this.data}</div>
+            h('div', {
+                on: {
+                    click: () => this.someClicHandler()
+                }
+            }, [this.data])
         );
     }
 }

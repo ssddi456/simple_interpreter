@@ -38,7 +38,7 @@ fis.hook('amd', {
 fis.hook('node_modules');
 
 fis.match('highlights/index.html', {
-    release: 'index.html'
+    release: 'index.html',
 });
 
 fis.match('*', {

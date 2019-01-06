@@ -62,28 +62,7 @@ export const context_mgr_mixin: ComponentOptions<ContextMgrMixin> = {
             this.sevenBHContext = loadSevenBHContext(this.currentLevel);
             this.interpreterContext = makeInterpreterContext();
         },
-        getCellClass(cell: SevenBHObject) {
-            if (cell.type == SevenBHMapMaker.datacube) {
-                return SevenBHMapMaker[SevenBHMapMaker.datacube];
-            } else if (cell.type == SevenBHMapMaker.worker) {
-                if (!cell.holds) {
-                    return SevenBHMapMaker[SevenBHMapMaker.worker];
-                } else {
-                    return 'worker-with-datacube';
-                }
-            }
-
-            return SevenBHMapMaker[cell.type];
-        },
-        getCellContent(cell: SevenBHObject) {
-            if (cell.type == SevenBHMapMaker.datacube) {
-                return cell.value;
-            } else if (cell.type == SevenBHMapMaker.worker) {
-                if (cell.holds) {
-                    return cell.holds.value;
-                }
-            }
-        },
+        
         tick() {
             interpreter(this.infos.ast, this.interpreterContext, this.sevenBHContext, this.infos.jumpTable);
         },

@@ -1,6 +1,7 @@
 import { SevenBHLevel } from "../interpreter/interpreter_with_jump";
 
 const level1: SevenBHLevel = {
+    name: 'move and drop',
     "map": [
         [
             {
@@ -725,7 +726,10 @@ const level1: SevenBHLevel = {
         ]
     ],
     "width": 10,
-    "height": 10
+    "height": 10,
+    isSuccess(context) {
+        return false;
+    }
 };
 
 export default [level1];

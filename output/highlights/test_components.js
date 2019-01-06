@@ -27,8 +27,17 @@ define('output/highlights/test_components', ['require', 'exports', 'module', "ou
       function default_1() {
           return _super !== null && _super.apply(this, arguments) || this;
       }
+      default_1.prototype.someClicHandler = function () {
+          console.log('yeah');
+          this.$emit('test');
+      };
       default_1.prototype.render = function (h) {
-          return (h("div", null, this.data));
+          var _this = this;
+          return (h('div', {
+              on: {
+                  click: function () { return _this.someClicHandler(); }
+              }
+          }, [this.data]));
       };
       __decorate([
           vue_property_decorator_1.Prop({ default: 'some sort of data' }),

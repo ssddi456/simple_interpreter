@@ -1,38 +1,29 @@
-import { default as Vue, CreateElement, } from 'vue/types';
+import { Vue, Component, Prop, Emit, Mixins } from 'vue-property-decorator';
+import { CreateElement } from 'vue/types';
+
 import levels from '../data/levels';
-import { SevenBHLevel } from '../interpreter/interpreter_with_jump';
 
+@Component
+export default class extends Vue {
+    levels = levels;
 
-interface LevelSelectorData {
-    levels: SevenBHLevel[];
-}
-
-interface LevelSelectorMethods {
-    selectLevel(n: number): void
-}
-
-type LevelSelector = LevelSelectorData & LevelSelectorMethods & Vue;
-
-export default {
-    data() {
-        return {
-            levels,
-        }
-    },
-    methods: {
-        selectLevel(n: number) {
-            console.log(arguments);
-
-            this.emit('change', n);
-        }
-    },
-    render(this: LevelSelector, h: CreateElement) {
+    selectLevel(n: number) {
+        console.log(arguments);
+        this.$emit('change', n);
+    }
+    render(h: CreateElement) {
         return (
             <div if={this.levels.length}>
                 {this.levels.map((element, idx) =>
-                    <span onClick={this.selectLevel}>{(idx + 1) + '.level name'}</span>
+                    h('span', {
+                        on: {
+                            click: (e: MouseEvent) => {
+                                this.selectLevel(idx);
+                            }
+                        }
+                    }, [`Day ${idx + 1} ${element.name}`])
                 )}
             </div>
         );
-    },
+    }
 }

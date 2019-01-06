@@ -3,6 +3,7 @@ define('output/data/levels', ['require', 'exports', 'module'], function(require,
   "use strict";
   Object.defineProperty(exports, "__esModule", { value: true });
   var level1 = {
+      name: 'move and drop',
       "map": [
           [
               {
@@ -727,7 +728,10 @@ define('output/data/levels', ['require', 'exports', 'module'], function(require,
           ]
       ],
       "width": 10,
-      "height": 10
+      "height": 10,
+      isSuccess: function (context) {
+          return false;
+      }
   };
   exports.default = [level1];
   

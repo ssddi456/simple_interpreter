@@ -88,12 +88,10 @@ define('output/highlights/edit_mixin', ['require', 'exports', 'module', "output/
   exports.edit_mixin = {
       data: function () {
           return {
-              mode: DisplayMode.playing,
               pointerMode: PointerMode.pointer,
               PointerMode: PointerMode,
               brush: interpreter_with_jump_1.SevenBHMapMaker.floor,
               brushTypes: interpreter_with_jump_1.SevenBHMapMaker,
-              modes: [DisplayMode.edit, DisplayMode.playing],
               width: 10,
               height: 10,
               editSevenBHContext: undefined,

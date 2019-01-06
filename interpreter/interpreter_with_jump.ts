@@ -107,9 +107,11 @@ export interface SevenBHContext {
     height: number,
 }
 export interface SevenBHLevel {
+    name: string;
     map: SevenBHObject[][];
-    width: number,
-    height: number,
+    width: number;
+    height: number;
+    isSuccess(context: SevenBHContext): boolean;
 }
 
 export function makeSevenBHContext(width: number, height: number): SevenBHContext {
@@ -316,7 +318,7 @@ export function getBinaneryValue(ast: AstBinary, context: InterpreterContext, ma
                 }
             case '!=':
                 if (obj.type !== SevenBHMapMaker[type]) {
-                    if(obj.type === SevenBHMapMaker.floor) {
+                    if (obj.type === SevenBHMapMaker.floor) {
                         return obj.has.every((x) => x.type !== SevenBHMapMaker[type]);
                     } else {
                         return true;
@@ -324,7 +326,7 @@ export function getBinaneryValue(ast: AstBinary, context: InterpreterContext, ma
                 } else {
                     return false;
                 }
-                return ;
+                return;
         }
     } else if (isValueCompare(ast)) {
         let obj: SevenBHBaseObject;
