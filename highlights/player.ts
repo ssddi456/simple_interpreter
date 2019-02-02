@@ -87,7 +87,7 @@ export default class extends Vue.extend({
                         <div class="line-content">
                             &nbsp;
                             <div v-for="token in line" :class='["token", token.error && "error"]' :style="{left: (token.pos.row * 7) + 'px'}"
-                                @click="showNodeInfo(token)">
+                                @click="showNodeInfo(token)" v-html="token.content">
                             </div>
                             <div v-if="originLines[idx].highlightRange !== undefined" :class='["token", "ast-range"]'
                                 :style="{left: (originLines[idx].highlightRange[0] * 7) + 'px', 

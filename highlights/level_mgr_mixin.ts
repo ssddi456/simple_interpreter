@@ -68,7 +68,7 @@ export interface LevelMgrMethods {
     loadLevel(n: number): void;
 }
 
-function makePlayStatus(): PlayStatus{
+function makePlayStatus(): PlayStatus {
     return {
         code: ''
     };
@@ -80,7 +80,17 @@ export const level_mgr_mixin: ComponentOptions<LevelMgrMixin> = {
     data() {
         return {
             levels,
-            playStatuses: [],
+            playStatuses: [{
+                code: `a:
+if c != datacube:
+    step s
+    jump a
+endif
+pickup c
+step s
+drop
+`
+            }],
             currentLevelIndex: -1,
             currentLevel: undefined,
         };

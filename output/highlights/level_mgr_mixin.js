@@ -15,7 +15,9 @@ define('output/highlights/level_mgr_mixin', ['require', 'exports', 'module', "ou
       data: function () {
           return {
               levels: levels_1.default,
-              playStatuses: [],
+              playStatuses: [{
+                      code: "a:\nif c != datacube:\n    step s\n    jump a\nendif\npickup c\nstep s\ndrop\n"
+                  }],
               currentLevelIndex: -1,
               currentLevel: undefined,
           };
