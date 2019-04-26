@@ -41,6 +41,9 @@ export const code_view_mixin: ComponentOptions<CodeViewMixin> = {
 
             this.lines = tokensToLines(tokens);
             this.originLines = makeLineInfo(code);
+            this.mapLineLength = Math.max(...this.originLines.map(function (lineInfo) {
+                return lineInfo.length;
+            }));
 
             return {
                 ctx,

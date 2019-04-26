@@ -20,6 +20,9 @@ define('output/highlights/code_view_mixin', ['require', 'exports', 'module', "ou
               var tokens = tokenizer_1.tokenize(ctx);
               this.lines = printer_1.tokensToLines(tokens);
               this.originLines = printer_1.makeLineInfo(code);
+              this.mapLineLength = Math.max.apply(Math, this.originLines.map(function (lineInfo) {
+                  return lineInfo.length;
+              }));
               return {
                   ctx: ctx,
                   tokens: tokens,
