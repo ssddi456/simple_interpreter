@@ -30,7 +30,7 @@ define('output/highlights/index', ['require', 'exports', 'module', "vue", "outpu
   })(mainVmModes || (mainVmModes = {}));
   var config = {
       el: '#main',
-      template: /** template */ "\n        <level_selector v-if=\"currentMode == mainVmModes.level_selector\" @change=\"changeHandler\"></level_selector>\n        <player v-else-if=\"currentMode == mainVmModes.player\" ref=\"player\" />\n        <editor v-else-if=\"currentMode == mainVmModes.editor\" />\n    ",
+      template: /* template */ "\n    <div>\n        <level_selector @change=\"changeHandler\"></level_selector>\n        <player v-if=\"currentMode == mainVmModes.player\" ref=\"player\" />\n        <editor v-else-if=\"currentMode == mainVmModes.editor\" />\n    </div>\n    ",
       components: {
           level_selector: level_selector_1.default,
           player: player_1.default,

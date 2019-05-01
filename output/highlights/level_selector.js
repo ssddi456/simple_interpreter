@@ -25,23 +25,36 @@ define('output/highlights/level_selector', ['require', 'exports', 'module', "out
       function default_1() {
           var _this = _super !== null && _super.apply(this, arguments) || this;
           _this.levels = levels_1.default;
+          _this.currentLevel = -1;
           return _this;
       }
       default_1.prototype.selectLevel = function (n) {
           console.log(arguments);
+          this.currentLevel = n;
           this.$emit('change', n);
       };
       default_1.prototype.render = function (h) {
           var _this = this;
-          return (h("div", { if: this.levels.length }, this.levels.map(function (element, idx) {
-              return h('span', {
+          return (h("div", { if: this.levels.length, class: "hmmm" }, this.currentLevel == -1
+              ? this.levels.map(function (element, idx) {
+                  return h('span', {
+                      on: {
+                          click: function (e) {
+                              _this.selectLevel(idx);
+                          }
+                      }
+                  }, ["Day " + (idx + 1) + " " + element.name]);
+              })
+              : h('span', {
                   on: {
                       click: function (e) {
-                          _this.selectLevel(idx);
+                          _this.currentLevel = -1;
                       }
                   }
-              }, ["Day " + (idx + 1) + " " + element.name]);
-          })));
+              }, [
+                  h('span', {}, ['<']),
+                  "Day " + this.currentLevel
+              ])));
       };
       default_1 = __decorate([
           vue_property_decorator_1.Component

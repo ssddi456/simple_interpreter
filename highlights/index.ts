@@ -40,10 +40,12 @@ enum mainVmModes {
 }
 const config: ComponentOptions<MainVm> = {
     el: '#main',
-    template: /** template */`
-        <level_selector v-if="currentMode == mainVmModes.level_selector" @change="changeHandler"></level_selector>
-        <player v-else-if="currentMode == mainVmModes.player" ref="player" />
+    template: /* template */`
+    <div>
+        <level_selector @change="changeHandler"></level_selector>
+        <player v-if="currentMode == mainVmModes.player" ref="player" />
         <editor v-else-if="currentMode == mainVmModes.editor" />
+    </div>
     `,
     components: {
         level_selector,

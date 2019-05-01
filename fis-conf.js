@@ -1,9 +1,4 @@
-fis.set('project.ignore', fis.get('project.ignore').concat(['test/**', 'output/*', '*.d.ts', '*.json', '*.md', 'LICENSE']));
-
-
-fis.match('output/*', {
-    release: false
-});
+fis.set('project.ignore', fis.get('project.ignore').concat(['test/**', '*.d.ts', '*.json', '*.md', 'LICENSE']));
 
 fis.match('node_modules/**.js', {
     isMod: true,
@@ -39,6 +34,11 @@ fis.hook('node_modules');
 
 fis.match('highlights/index.html', {
     release: 'index.html',
+});
+
+
+fis.match('output/**', {
+    release: false
 });
 
 fis.match('*', {
